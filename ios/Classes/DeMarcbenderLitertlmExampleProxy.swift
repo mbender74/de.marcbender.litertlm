@@ -6,6 +6,8 @@
 //  Copyright (c) 2026 Your Company. All rights reserved.
 //
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 
 @objc(DeMarcbenderLitertlmExampleProxy)
 class DeMarcbenderLitertlmExampleProxy: TiProxy {
