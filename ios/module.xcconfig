@@ -1,0 +1,6 @@
+//
+// TitaniumLiteRTLM Module Build Configuration
+//
+
+// Add platform directory to framework search paths so the XCFramework is found
+FRAMEWORK_SEARCH_PATHS = $(inherited) "$(PROJECT_DIR)/platform"

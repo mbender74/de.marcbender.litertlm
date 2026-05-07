@@ -1,0 +1,27 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 4
+architectures: arm64-v8a armeabi-v7a x86 x86_64
+description: TitaniumLiteRTLM
+author: Marc Bender
+license: Specify your license
+copyright: Copyright (c) 2026 by Your Company
+
+# these should not be edited
+name: TitaniumLiteRTLM
+moduleid: de.marcbender.litertlm
+guid: 208537d4-6bc7-4c6c-abcc-71efc42ca465
+platform: android
+#
+# Classpaths and plugins are used for android packages that requires them
+# to use them you have to add your classpaths and plugins comma separated
+# Ex:
+# classpaths: classpath1,classpath2
+# plugins: plugin1,plugin2
+#
+classpaths:
+plugins:
+minsdk: 13.2.0.GA

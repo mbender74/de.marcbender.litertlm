@@ -1,0 +1,26 @@
+
+7.5.2026, 15:12:40
+
+Operating System
+  Name                        = macOS
+  Version                     = 26.2
+  Architecture                = 64-bit
+  # CPUs                      = 14
+  Memory                      = 48.0GB
+
+Node.js
+  Node.js Version             = 24.14.1
+  npm Version                 = 11.11.0
+
+Titanium CLI
+  CLI Version                 = 8.1.5
+
+Titanium SDK
+  SDK Version                 = 13.2.0.GA
+  SDK Path                    = /Users/marcbender/Library/Application Support/Titanium/mobilesdk/osx/13.2.0.GA
+  Target Platform             = iphone
+
+Command
+  /usr/local/bin/node /Users/marcbender/.npm-global/bin/ti build -p ios --build-only
+
+ 
