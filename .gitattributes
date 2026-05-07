@@ -1,3 +1,14 @@
 /ios/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
 /ios/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
 /ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/DerivedData/ModuleCache.noindex/UIKit-3TPHWBSS45JW3G4KEX4CBJKXL.pcm filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/DerivedData/ModuleCache.noindex/UIKit-AX08OINHVRB6GHCE1FBUNPUO9.pcm filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/Frameworks/TitaniumKit.xcframework/ios-arm64_x86_64-maccatalyst/dSYMs/TitaniumKit.framework.dSYM/Contents/Resources/DWARF/TitaniumKit filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/build/Intermediates/PrecompiledHeaders/SharedPrecompiledHeaders/16503575496456273260/testApp_Prefix.pch.gch filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/build/Intermediates/PrecompiledHeaders/SharedPrecompiledHeaders/3450196934395908187/testApp_Prefix.pch.gch filter=lfs diff=lfs merge=lfs -text
+/example/testApp/build/iphone/build/Products/Debug-iphonesimulator/testApp.app.dSYM/Contents/Resources/DWARF/testApp filter=lfs diff=lfs merge=lfs -text
+/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
+/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/LiteRTLM filter=lfs diff=lfs merge=lfs -text
+/example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text

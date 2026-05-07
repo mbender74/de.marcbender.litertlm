@@ -90,7 +90,7 @@ var statusLabel = Ti.UI.createLabel({
     font: { fontSize: 12 },
     left: 10,
     width: Ti.UI.SIZE
-);
+});
 
 // Header-Buttons (Rechts)
 var toolsButton = Ti.UI.createButton({
