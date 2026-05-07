@@ -69,7 +69,7 @@ var mainWin = Ti.UI.createWindow({
 // Header-Bereich
 var headerView = Ti.UI.createView({
     layout: 'horizontal',
-    height: Ti.UI.SIZE,
+    height: 44,
     backgroundColor: '#16213e',
     top: 0,
     left: 0,
@@ -81,7 +81,7 @@ var headerTitle = Ti.UI.createLabel({
     color: '#e94560',
     font: { fontSize: 18, fontWeight: 'bold' },
     left: 10,
-    width: Ti.UI.SIZE
+    width: 200
 });
 
 var statusLabel = Ti.UI.createLabel({
@@ -89,7 +89,8 @@ var statusLabel = Ti.UI.createLabel({
     color: '#a0a0a0',
     font: { fontSize: 12 },
     left: 10,
-    width: Ti.UI.SIZE
+    width: 220
+});
 });
 
 // Header-Buttons (Rechts)
@@ -173,7 +174,7 @@ function renderAllMessages() {
 
 function createMessageRow(msg, index) {
     var row = Ti.UI.createTableViewRow({
-        height: Ti.UI.SIZE,
+        height: 44,
         selectionStyle: Ti.UI.iOS.TableViewRow.TABLEVIEW_ROW_STYLE_PLAIN,
         backgroundColor: 'transparent',
         hasUnread: false
@@ -181,7 +182,7 @@ function createMessageRow(msg, index) {
 
     var container = Ti.UI.createView({
         layout: 'horizontal',
-        height: Ti.UI.SIZE,
+        height: 44,
         top: 5,
         bottom: 5
     });
@@ -194,7 +195,7 @@ function createMessageRow(msg, index) {
             font: { fontSize: 11, fontStyle: 'italic' },
             textAlign: 'center',
             width: '100%',
-            height: Ti.UI.SIZE,
+            height: 44,
             top: 5,
             bottom: 5
         });
@@ -207,7 +208,7 @@ function createMessageRow(msg, index) {
 
     var bubble = Ti.UI.createView({
         layout: 'vertical',
-        height: Ti.UI.SIZE,
+        height: 44,
         width: '80%',
         backgroundColor: isUser ? '#e94560' : '#16213e',
         borderRadius: 12,
@@ -236,7 +237,7 @@ function createMessageRow(msg, index) {
         color: isUser ? '#ffffff' : '#e0e0e0',
         font: { fontSize: 14, fontWeight: 'normal' },
         textAlign: 'left',
-        height: Ti.UI.SIZE,
+        height: 44,
         width: '100%',
         top: msg.image ? 5 : 0,
         bottom: 5,
@@ -255,7 +256,7 @@ function createMessageRow(msg, index) {
 // ============================================================
 var downloadView = Ti.UI.createView({
     layout: 'vertical',
-    height: Ti.UI.SIZE,
+    height: 44,
     top: 10,
     bottom: 10
 });
@@ -284,7 +285,7 @@ downloadView.add(progressBar);
 // ============================================================
 var loadModelView = Ti.UI.createView({
     layout: 'vertical',
-    height: Ti.UI.SIZE,
+    height: 44,
     top: 10,
     bottom: 10
 });
