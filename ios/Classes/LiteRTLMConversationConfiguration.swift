@@ -13,12 +13,12 @@ import TitaniumKit
 @objc(LiteRTLMConversationConfiguration)
 public class LiteRTLMConversationConfiguration: TiProxy {
 
-  private var _maxOutputTokens: Int32 = 1024
-  private var _samplerType: String = "balanced"
-  private var _tools: [LiteRTLMTool] = []
-  private var _toolExecutionMode: String = "automatic"
-  private var _maxImageDimension: Int = 1024
-  private var _systemPrompt: String?
+  internal var _maxOutputTokens: Int32 = 1024
+  internal var _samplerType: String = "balanced"
+  internal var _tools: [LiteRTLMTool] = []
+  internal var _toolExecutionMode: String = "automatic"
+  internal var _maxImageDimension: Int = 1024
+  internal var _systemPrompt: String?
 
   @objc public var maxOutputTokens: Int32 {
       get { return _maxOutputTokens }

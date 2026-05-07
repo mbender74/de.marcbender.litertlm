@@ -13,11 +13,11 @@ import TitaniumKit
 @objc(LiteRTLMEngineProxy)
 public class LiteRTLMEngineProxy: TiProxy {
 
-  private var _engine: LMEngine?
-  private var _status: String = "notLoaded"
-  private var _isReady: Bool = false
-  private var _lastError: String?
-  private var _configuration: EngineConfiguration?
+  internal var _engine: LMEngine?
+  internal var _status: String = "notLoaded"
+  internal var _isReady: Bool = false
+  internal var _lastError: String?
+  internal var _configuration: EngineConfiguration?
 
   @objc public var status: String {
       get { return _status }
@@ -55,26 +55,26 @@ public class LiteRTLMEngineProxy: TiProxy {
           await MainActor.run {
             _status = "error"
             _lastError = "Engine not initialized"
-            fireEvent("error", withObject: ["message": "Engine not initialized"])
+            fireEvent("error", with: ["message": "Engine not initialized"])
           }
           return
         }
         _status = "loading"
         isReady = false
-        fireEvent("statuschange", withObject: ["status": "loading"])
+        fireEvent("statuschange", with: ["status": "loading"])
         try await engine.load()
         await MainActor.run {
           _status = "ready"
           _isReady = true
-          fireEvent("statuschange", withObject: ["status": "ready"])
-          fireEvent("ready", withObject: [:])
+          fireEvent("statuschange", with: ["status": "ready"])
+          fireEvent("ready", with: [:])
         }
       } catch {
         await MainActor.run {
           _status = "error"
           _isReady = false
           _lastError = error.localizedDescription
-          fireEvent("error", withObject: ["message": error.localizedDescription, "error": error])
+          fireEvent("error", with: ["message": error.localizedDescription, "error": error])
         }
       }
     }
@@ -84,11 +84,13 @@ public class LiteRTLMEngineProxy: TiProxy {
   public func unload() {
     Task {
       guard let engine = _engine else { return }
-      engine.unload()
+      // LMEngine is an actor; unload() accesses actor-isolated `status`, so we
+      // must call it with `await`.
+      await engine.unload()
       await MainActor.run {
         _status = "notLoaded"
         _isReady = false
-        fireEvent("statuschange", withObject: ["status": "notLoaded"])
+        fireEvent("statuschange", with: ["status": "notLoaded"])
       }
     }
   }
@@ -97,11 +99,11 @@ public class LiteRTLMEngineProxy: TiProxy {
   public func createSession(_ configuration: LiteRTLMSessionConfiguration?) {
     Task {
       do {
-        guard let engine = _engine, engine.isReady else {
+        guard let engine = _engine, await engine.isReady else {
           await MainActor.run {
             _status = "error"
             _lastError = "Engine is not ready or not initialized"
-            fireEvent("error", withObject: ["message": "Engine is not ready or not initialized"])
+            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           }
           return
         }
@@ -112,12 +114,12 @@ public class LiteRTLMEngineProxy: TiProxy {
         proxy._engineProxy = self
         proxy._configuration = configuration
         replaceValue(proxy, forKey: "session", notification: false)
-        fireEvent("sessioncreated", withObject: ["session": proxy])
+        fireEvent("sessioncreated", with: ["session": proxy])
       } catch {
         await MainActor.run {
           _status = "error"
           _lastError = error.localizedDescription
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
@@ -127,11 +129,11 @@ public class LiteRTLMEngineProxy: TiProxy {
   public func createConversation(_ configuration: LiteRTLMConversationConfiguration?) {
     Task {
       do {
-        guard let engine = _engine, engine.isReady else {
+        guard let engine = _engine, await engine.isReady else {
           await MainActor.run {
             _status = "error"
             _lastError = "Engine is not ready or not initialized"
-            fireEvent("error", withObject: ["message": "Engine is not ready or not initialized"])
+            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           }
           return
         }
@@ -142,12 +144,12 @@ public class LiteRTLMEngineProxy: TiProxy {
         proxy._engineProxy = self
         proxy._configuration = configuration
         replaceValue(proxy, forKey: "conversation", notification: false)
-        fireEvent("conversationcreated", withObject: ["conversation": proxy])
+        fireEvent("conversationcreated", with: ["conversation": proxy])
       } catch {
         await MainActor.run {
           _status = "error"
           _lastError = error.localizedDescription
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }

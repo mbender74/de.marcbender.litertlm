@@ -14,12 +14,12 @@ import TitaniumKit
 @objc(LiteRTLMModelInfo)
 public class LiteRTLMModelInfo: TiProxy {
 
-  private var _name: String = ""
-  private var _displayName: String = ""
-  private var _url: String = ""
-  private var _expectedSize: Int64?
-  private var _fileName: String = ""
-  private var _nativeModel: ModelInfo?
+  internal var _name: String = ""
+  internal var _displayName: String = ""
+  internal var _url: String = ""
+  internal var _expectedSize: Int64?
+  internal var _fileName: String = ""
+  internal var _nativeModel: ModelInfo?
 
   @objc public var name: String {
     get { _name }
@@ -36,7 +36,7 @@ public class LiteRTLMModelInfo: TiProxy {
     set { _url = newValue }
   }
 
-  @objc public var expectedSize: Int64? {
+  public var expectedSize: Int64? {
     get { _expectedSize }
     set { _expectedSize = newValue }
   }

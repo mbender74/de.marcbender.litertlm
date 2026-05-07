@@ -13,8 +13,8 @@ import TitaniumKit
 @objc(LiteRTLMMessage)
 public class LiteRTLMMessage: TiProxy {
 
-  private var _role: String = "user"
-  private var _contents: [LiteRTLMContent] = []
+  internal var _role: String = "user"
+  internal var _contents: [LiteRTLMContent] = []
 
   @objc public var role: String {
       get { return _role }

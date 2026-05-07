@@ -13,12 +13,12 @@ import TitaniumKit
 @objc(LiteRTLMContent)
 public class LiteRTLMContent: TiProxy {
 
-  private var _type: String = "text"
-  private var _text: String?
-  private var _imageData: Data?
-  private var _audioData: Data?
-  private var _audioFormat: String = "wav"
-  private var _maxDimension: Int = 1024
+  internal var _type: String = "text"
+  internal var _text: String?
+  internal var _imageData: Data?
+  internal var _audioData: Data?
+  internal var _audioFormat: String = "wav"
+  internal var _maxDimension: Int = 1024
 
   @objc public var type: String {
       get { return _type }

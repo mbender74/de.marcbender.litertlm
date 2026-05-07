@@ -28,8 +28,7 @@ import TitaniumKit
 @objc(DeMarcbenderLitertlmModule)
 class DeMarcbenderLitertlmModule: TiModule {
 
-  @objc
-  override func moduleGUID() -> String {
+  func moduleGUID() -> String {
     return "208537d4-6bc7-4c6c-abcc-71efc42ca465"
   }
 
@@ -91,7 +90,7 @@ class DeMarcbenderLitertlmModule: TiModule {
     replaceValue(proxy, forKey: "engine", notification: false)
 
     debugPrint("[DEBUG] Engine created for model: \(modelPath)")
-    fireEvent("enginecreated", withObject: ["engine": proxy])
+    fireEvent("enginecreated", with: ["engine": proxy])
   }
 
   @objc(createEngineWithConfig:)
@@ -110,7 +109,7 @@ class DeMarcbenderLitertlmModule: TiModule {
       replaceValue(proxy, forKey: "engine", notification: false)
 
       debugPrint("[DEBUG] Engine created with config")
-      fireEvent("enginecreated", withObject: ["engine": proxy])
+      fireEvent("enginecreated", with: ["engine": proxy])
     } catch {
       throwException("Engine creation failed", subreason: error.localizedDescription, location: #function)
     }

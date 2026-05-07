@@ -3,7 +3,7 @@
 //  TitaniumLiteRTLM
 //
 //  Created by Marc Bender
-//  Copyright (c 2026 by Your Company. All rights reserved.
+//  Copyright (c) 2026 by Your Company. All rights reserved.
 //
 import CLiteRTLM
 import UIKit
@@ -13,11 +13,11 @@ import TitaniumKit
 @objc(LiteRTLMSamplerConfiguration)
 public class LiteRTLMSamplerConfiguration: TiProxy {
 
-  private var _temperature: Float = 0.7
-  private var _topK: Int32 = 40
-  private var _topP: Float = 0.95
-  private var _seed: Int32 = -1
-  private var _samplerType: String = "topK"
+  internal var _temperature: Float = 0.7
+  internal var _topK: Int32 = 40
+  internal var _topP: Float = 0.95
+  internal var _seed: Int32 = -1
+  internal var _samplerType: String = "topK"
 
   @objc public var temperature: Float {
       get { return _temperature }
@@ -45,7 +45,7 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
   }
 
   public static func greedy() -> LiteRTLMSamplerConfiguration {
-    let config = LiteRTLMSamplerConfiguration(application: .getInstance())
+    let config = LiteRTLMSamplerConfiguration()
     config._temperature = 0.0
     config._topK = 1
     config._topP = 1.0
@@ -54,7 +54,7 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
   }
 
   public static func balanced() -> LiteRTLMSamplerConfiguration {
-    let config = LiteRTLMSamplerConfiguration(application: .getInstance())
+    let config = LiteRTLMSamplerConfiguration()
     config._temperature = 0.7
     config._topK = 40
     config._topP = 0.95
@@ -63,7 +63,7 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
   }
 
   public static func creative() -> LiteRTLMSamplerConfiguration {
-    let config = LiteRTLMSamplerConfiguration(application: .getInstance())
+    let config = LiteRTLMSamplerConfiguration()
     config._temperature = 1.0
     config._topK = 100
     config._topP = 0.98

@@ -14,8 +14,8 @@ import TitaniumKit
 @objc(LiteRTLMModelDownloaderProxy)
 public class LiteRTLMModelDownloaderProxy: TiProxy {
 
-  private var _downloader: ModelDownloader?
-  private var _modelsDirectory: String?
+  internal var _downloader: ModelDownloader?
+  internal var _modelsDirectory: String?
 
   @objc public var modelsDirectory: String? {
       get { return _modelsDirectory }
@@ -29,11 +29,9 @@ public class LiteRTLMModelDownloaderProxy: TiProxy {
   }
 
   @objc
-  public init(modelsDirectory: String?) {
-    super._init(withPageContext: nil)
-    if let dir = modelsDirectory {
-      _modelsDirectory = dir
-    }
+  public convenience init?(modelsDirectory: String?) {
+    self.init()
+    _modelsDirectory = modelsDirectory
   }
 
   // MARK: - Public API
@@ -41,14 +39,13 @@ public class LiteRTLMModelDownloaderProxy: TiProxy {
   @objc
   public func download(_ modelInfo: LiteRTLMModelInfo) {
     Task {
-      await modelInfo.downloader.download(model: modelInfo.toNative())
+      await downloader().download(model: modelInfo.toNative())
     }
   }
 
-  @objc
   public func downloadFrom(_ url: String, fileName: String?, expectedSize: Int64?) {
     guard let url = URL(string: url) else {
-      fireEvent("error", withObject: ["message": "Invalid URL"])
+      fireEvent("error", with: ["message": "Invalid URL"])
       return
     }
     Task {

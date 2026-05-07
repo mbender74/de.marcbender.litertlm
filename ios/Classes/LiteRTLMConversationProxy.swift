@@ -13,11 +13,11 @@ import TitaniumKit
 @objc(LiteRTLMConversationProxy)
 public class LiteRTLMConversationProxy: TiProxy {
 
-  private var _conversation: LMConversation?
-  private var _isActive: Bool = false
-  private var _engineProxy: LiteRTLMEngineProxy?
-  private var _configuration: LiteRTLMConversationConfiguration?
-  private var _history: [LiteRTLMMessage] = []
+  internal var _conversation: LMConversation?
+  internal var _isActive: Bool = false
+  internal var _engineProxy: LiteRTLMEngineProxy?
+  internal var _configuration: LiteRTLMConversationConfiguration?
+  internal var _history: [LiteRTLMMessage] = []
 
   @objc public var isActive: Bool {
       get { return _isActive }
@@ -47,15 +47,17 @@ public class LiteRTLMConversationProxy: TiProxy {
         await MainActor.run {
           let msg = LiteRTLMMessage()
           msg._role = "model"
-          msg._text = result
+          let content = LiteRTLMContent()
+          content._text = result
+          msg._contents = [content]
           _history.append(msg)
-          fireEvent("message", withObject: ["role": "model", "content": result])
+          fireEvent("message", with: ["role": "model", "content": result])
         }
         _isActive = false
       } catch {
         await MainActor.run {
           _isActive = false
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
@@ -78,14 +80,15 @@ public class LiteRTLMConversationProxy: TiProxy {
     }
 
     var audioData: [Data] = []
+    var audioFormatVal: AudioFormat = .wav
+    switch audioFormat {
+    case "flac": audioFormatVal = .flac
+    case "mp3": audioFormatVal = .mp3
+    default: audioFormatVal = .wav
+    }
+
     for aud in audio {
       if let data = aud["data"] as? Data {
-        var audioFormatVal: AudioFormat = .wav
-        switch audioFormat {
-        case "flac": audioFormatVal = .flac
-        case "mp3": audioFormatVal = .mp3
-        default: audioFormatVal = .wav
-        }
         audioData.append(data)
       }
     }
@@ -98,15 +101,17 @@ public class LiteRTLMConversationProxy: TiProxy {
         await MainActor.run {
           let msg = LiteRTLMMessage()
           msg._role = "model"
-          msg._text = result
+          let content = LiteRTLMContent()
+          content._text = result
+          msg._contents = [content]
           _history.append(msg)
-          fireEvent("message", withObject: ["role": "model", "content": result])
+          fireEvent("message", with: ["role": "model", "content": result])
         }
         _isActive = false
       } catch {
         await MainActor.run {
           _isActive = false
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
@@ -131,10 +136,10 @@ public class LiteRTLMConversationProxy: TiProxy {
     }
 
     var audioData: [Data] = []
+    var audioFormatVal: AudioFormat = .wav
     if let audio = audio {
       for aud in audio {
         if let data = aud["data"] as? Data {
-          var audioFormatVal: AudioFormat = .wav
           switch audioFormat {
           case "flac": audioFormatVal = .flac
           case "mp3": audioFormatVal = .mp3
@@ -146,7 +151,7 @@ public class LiteRTLMConversationProxy: TiProxy {
     }
 
     guard let conversation = _conversation else {
-      fireEvent("error", withObject: ["message": "No active conversation"])
+      fireEvent("error", with: ["message": "No active conversation"])
       return
     }
 
@@ -157,7 +162,7 @@ public class LiteRTLMConversationProxy: TiProxy {
         do {
           for try await token in stream {
             await MainActor.run {
-              fireEvent("tokencode", withObject: ["token": token])
+              fireEvent("tokencode", with: ["token": token])
             }
           }
           await MainActor.run {
@@ -165,18 +170,18 @@ public class LiteRTLMConversationProxy: TiProxy {
             let msg = LiteRTLMMessage()
             msg._role = "model"
             _history.append(msg)
-            fireEvent("end", withObject: [:])
+            fireEvent("end", with: [:])
           }
         } catch {
           await MainActor.run {
             _isActive = false
-            fireEvent("error", withObject: ["message": error.localizedDescription])
+            fireEvent("error", with: ["message": error.localizedDescription])
           }
         }
       }
     } catch {
       _isActive = false
-      fireEvent("error", withObject: ["message": error.localizedDescription])
+      fireEvent("error", with: ["message": error.localizedDescription])
     }
   }
 
@@ -198,10 +203,10 @@ public class LiteRTLMConversationProxy: TiProxy {
     }
 
     var audioData: [Data] = []
+    var audioFormatVal: AudioFormat = .wav
     if let audio = audio {
       for aud in audio {
         if let data = aud["data"] as? Data {
-          var audioFormatVal: AudioFormat = .wav
           switch audioFormat {
           case "flac": audioFormatVal = .flac
           case "mp3": audioFormatVal = .mp3
@@ -220,13 +225,15 @@ public class LiteRTLMConversationProxy: TiProxy {
         await MainActor.run {
           let msg = LiteRTLMMessage()
           msg._role = "model"
-          msg._text = result
+          let content = LiteRTLMContent()
+          content._text = result
+          msg._contents = [content]
           _history.append(msg)
-          fireEvent("message", withObject: ["role": "model", "content": result])
+          fireEvent("message", with: ["role": "model", "content": result])
         }
       } catch {
         await MainActor.run {
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
@@ -237,7 +244,7 @@ public class LiteRTLMConversationProxy: TiProxy {
   public func cancel() {
     _conversation?.cancel()
     _isActive = false
-    fireEvent("cancelled", withObject: [:])
+    fireEvent("cancelled", with: [:])
   }
 
   @objc
@@ -245,7 +252,7 @@ public class LiteRTLMConversationProxy: TiProxy {
     _conversation?.close()
     _isActive = false
     _history = []
-    fireEvent("close", withObject: [:])
+    fireEvent("close", with: [:])
   }
 
   public func getBenchmarkInfo() -> [String: Any]? {

@@ -13,14 +13,14 @@ import TitaniumKit
 @objc(LiteRTLMEngineConfiguration)
 public class LiteRTLMEngineConfiguration: TiProxy {
 
-  private var _modelPath: String = ""
-  private var _primaryBackend: String = "cpu"
-  private var _visionBackend: String?
-  private var _audioBackend: String?
-  private var _maxTokens: Int32?
-  private var _cacheDir: String?
-  private var _isBenchmarkEnabled: Bool = false
-  private var _logLevel: String = "warning"
+  internal var _modelPath: String = ""
+  internal var _primaryBackend: String = "cpu"
+  internal var _visionBackend: String?
+  internal var _audioBackend: String?
+  internal var _maxTokens: Int32?
+  internal var _cacheDir: String?
+  internal var _isBenchmarkEnabled: Bool = false
+  internal var _logLevel: String = "warning"
 
   @objc public var modelPath: String {
       get { return _modelPath }
@@ -42,7 +42,7 @@ public class LiteRTLMEngineConfiguration: TiProxy {
       set { _audioBackend = newValue; replaceValue(newValue, forKey: "audioBackend", notification: false) }
   }
 
-  @objc public var maxTokens: Int32? {
+  public var maxTokens: Int32? {
       get { return _maxTokens }
       set { _maxTokens = newValue; replaceValue(newValue, forKey: "maxTokens", notification: false) }
   }

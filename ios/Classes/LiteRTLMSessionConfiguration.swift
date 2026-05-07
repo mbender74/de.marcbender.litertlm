@@ -13,8 +13,8 @@ import TitaniumKit
 @objc(LiteRTLMSessionConfiguration)
 public class LiteRTLMSessionConfiguration: TiProxy {
 
-  private var _maxOutputTokens: Int32 = 512
-  private var _samplerType: String = "balanced"
+  internal var _maxOutputTokens: Int32 = 512
+  internal var _samplerType: String = "balanced"
 
   @objc public var maxOutputTokens: Int32 {
       get { return _maxOutputTokens }

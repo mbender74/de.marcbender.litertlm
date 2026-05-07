@@ -13,12 +13,12 @@ import TitaniumKit
 @objc(LiteRTLMSessionProxy)
 public class LiteRTLMSessionProxy: TiProxy {
 
-  private var _session: LMSession?
-  private var _isActive: Bool = false
-  private var _engineProxy: LiteRTLMEngineProxy?
-  private var _configuration: LiteRTLMSessionConfiguration?
-  private var _activeTasks: [String: Task<String, Error>] = [:]
-  private var _taskCounter: Int = 0
+  internal var _session: LMSession?
+  internal var _isActive: Bool = false
+  internal var _engineProxy: LiteRTLMEngineProxy?
+  internal var _configuration: LiteRTLMSessionConfiguration?
+  internal var _activeTasks: [String: Task<Optional<String>, Error>] = [:]
+  internal var _taskCounter: Int = 0
 
   @objc public var isActive: Bool {
       get { return _isActive }
@@ -35,23 +35,24 @@ public class LiteRTLMSessionProxy: TiProxy {
 
   @objc
   public func generate(_ prompt: String, template: String?) {
-    let task = Task {
+    let task = Task<String?, Error> {
       do {
         guard let session = _session else { throw LiteRTLMError.noActiveSession }
         let template: PromptTemplate = templateToNative(template) ?? .gemma
         let result = try await session.generate(prompt, template: template)
         await MainActor.run {
-          fireEvent("generatelogic", withObject: ["result": result])
+          fireEvent("generatelogic", with: ["result": result])
         }
+        return nil
       } catch {
         await MainActor.run {
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
+        return nil
       }
     }
     let taskId = String(_taskCounter); _taskCounter += 1
     _activeTasks[taskId] = task
-    task.getValue() // ensure we retain the result
     _ = _activeTasks.removeValue(forKey: taskId)
   }
 
@@ -84,18 +85,20 @@ public class LiteRTLMSessionProxy: TiProxy {
       }
     }
 
-    let task = Task {
+    let task = Task<String?, Error> {
       do {
         guard let session = _session else { throw LiteRTLMError.noActiveSession }
         let template: PromptTemplate = templateToNative(template) ?? .gemma
         let result = try await session.generate(text: text, images: imageData, audio: audioData, template: template)
         await MainActor.run {
-          fireEvent("generatelogic", withObject: ["result": result])
+          fireEvent("generatelogic", with: ["result": result])
         }
+        return nil
       } catch {
         await MainActor.run {
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
+        return nil
       }
     }
     let taskId = String(_taskCounter); _taskCounter += 1
@@ -106,7 +109,7 @@ public class LiteRTLMSessionProxy: TiProxy {
   @objc
   public func generateStream(_ prompt: String, template: String?) {
     guard let session = _session else {
-      fireEvent("error", withObject: ["message": "No active session"])
+      fireEvent("error", with: ["message": "No active session"])
       return
     }
     let template: PromptTemplate = templateToNative(template) ?? .gemma
@@ -117,17 +120,17 @@ public class LiteRTLMSessionProxy: TiProxy {
       do {
         for try await token in stream {
           await MainActor.run {
-            fireEvent("tokencode", withObject: ["token": token])
+            fireEvent("tokencode", with: ["token": token])
           }
         }
         await MainActor.run {
           _isActive = false
-          fireEvent("end", withObject: [:])
+          fireEvent("end", with: [:])
         }
       } catch {
         await MainActor.run {
           _isActive = false
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
@@ -135,19 +138,21 @@ public class LiteRTLMSessionProxy: TiProxy {
 
   @objc
   public func collectStream(_ prompt: String, template: String?) {
-    let task = Task {
+    let task: Task<String?, Error> = Task {
       do {
         guard let session = _session else { throw LiteRTLMError.noActiveSession }
         let template: PromptTemplate = templateToNative(template) ?? .gemma
         let stream = session.generateStream(prompt, template: template)
         let result = try await stream.collect()
         await MainActor.run {
-          fireEvent("generatelogic", withObject: ["result": result])
+          fireEvent("generatelogic", with: ["result": result])
         }
+        return result
       } catch {
         await MainActor.run {
-          fireEvent("error", withObject: ["message": error.localizedDescription])
+          fireEvent("error", with: ["message": error.localizedDescription])
         }
+        return ""
       }
     }
     let taskId = String(_taskCounter); _taskCounter += 1
@@ -159,7 +164,7 @@ public class LiteRTLMSessionProxy: TiProxy {
   public func close() {
     _session?.close()
     _isActive = false
-    fireEvent("close", withObject: [:])
+    fireEvent("close", with: [:])
   }
 
   public func getBenchmarkInfo() -> [String: Any]? {

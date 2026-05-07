@@ -13,17 +13,17 @@ import TitaniumKit
 @objc(LiteRTLMTool)
 public class LiteRTLMTool: TiProxy {
 
-  private var _name: String = ""
-  private var _description: String = ""
-  private var _parameters: [Any] = []
-  private var _executeCallback: KrollCallback?
+  internal var _name: String = ""
+  internal var _description: String = ""
+  internal var _parameters: [Any] = []
+  internal var _executeCallback: KrollCallback?
 
   @objc public var name: String {
     get { _name }
     set { _name = newValue }
   }
 
-  @objc public var description: String {
+  @objc public override var description: String {
     get { _description }
     set { _description = newValue }
   }
@@ -69,7 +69,7 @@ public class LiteRTLMTool: TiProxy {
           var resolvedResult: [String: Any]?
           let semaphore = DispatchSemaphore(value: 0)
 
-          callback.call(withArguments: [args]) { (returned: Any?) in
+          callback.call([args]) { (returned: Any?) in
             if let dict = returned as? [String: Any] {
               resolvedResult = dict
             } else if let str = returned as? String {
