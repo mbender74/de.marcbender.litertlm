@@ -26,15 +26,14 @@ public class LiteRTLMSessionConfiguration: TiProxy {
       set { _samplerType = newValue; replaceValue(newValue, forKey: "samplerType", notification: false) }
   }
 
-  @objc public var sampler: LiteRTLMSamplerConfiguration?
+  public var sampler: LiteRTLMSamplerConfiguration?
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public func toNative() -> SessionConfiguration {
     var config = SessionConfiguration()
     config = config.maxOutputTokens(_maxOutputTokens)

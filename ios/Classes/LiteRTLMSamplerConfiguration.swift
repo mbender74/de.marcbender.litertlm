@@ -44,7 +44,6 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
       set { _samplerType = newValue; replaceValue(newValue, forKey: "samplerType", notification: false) }
   }
 
-  @objc
   public static func greedy() -> LiteRTLMSamplerConfiguration {
     let config = LiteRTLMSamplerConfiguration(application: .getInstance())
     config._temperature = 0.0
@@ -54,7 +53,6 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
     return config
   }
 
-  @objc
   public static func balanced() -> LiteRTLMSamplerConfiguration {
     let config = LiteRTLMSamplerConfiguration(application: .getInstance())
     config._temperature = 0.7
@@ -64,7 +62,6 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
     return config
   }
 
-  @objc
   public static func creative() -> LiteRTLMSamplerConfiguration {
     let config = LiteRTLMSamplerConfiguration(application: .getInstance())
     config._temperature = 1.0
@@ -74,7 +71,6 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
     return config
   }
 
-  @objc
   public func toNative() -> SamplerConfiguration {
     var type: SamplerConfiguration.SamplerType = .topK
     switch _samplerType {
@@ -92,7 +88,7 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }

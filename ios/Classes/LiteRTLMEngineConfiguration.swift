@@ -63,12 +63,11 @@ public class LiteRTLMEngineConfiguration: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public func toNative() throws -> EngineConfiguration {
     var config = EngineConfiguration(modelPath: URL(fileURLWithPath: _modelPath))
 

@@ -26,7 +26,7 @@ public class LiteRTLMSessionProxy: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
@@ -162,7 +162,6 @@ public class LiteRTLMSessionProxy: TiProxy {
     fireEvent("close", withObject: [:])
   }
 
-  @objc
   public func getBenchmarkInfo() -> [String: Any]? {
     guard let session = _session else { return nil }
     guard let info = session.benchmarkInfo() else { return nil }

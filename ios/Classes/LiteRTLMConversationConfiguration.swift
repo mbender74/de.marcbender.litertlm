@@ -50,15 +50,14 @@ public class LiteRTLMConversationConfiguration: TiProxy {
       set { _systemPrompt = newValue; replaceValue(newValue, forKey: "systemPrompt", notification: false) }
   }
 
-  @objc public var sampler: LiteRTLMSamplerConfiguration?
+  public var sampler: LiteRTLMSamplerConfiguration?
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public func toNative() -> ConversationConfiguration {
     var config = ConversationConfiguration()
     config = config.maxOutputTokens(_maxOutputTokens)

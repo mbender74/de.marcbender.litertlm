@@ -39,12 +39,11 @@ public class LiteRTLMToolParameter: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public func toNative() -> Tool.Parameter {
     let paramType: Tool.ParameterType
     switch _type {

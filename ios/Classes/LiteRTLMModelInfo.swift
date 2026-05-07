@@ -47,12 +47,11 @@ public class LiteRTLMModelInfo: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public static func gemma4E2B() -> LiteRTLMModelInfo {
     let info = LiteRTLMModelInfo()
     let native = ModelRegistry.gemma4E2B
@@ -65,7 +64,6 @@ public class LiteRTLMModelInfo: TiProxy {
     return info
   }
 
-  @objc
   public static func gemma4E4B() -> LiteRTLMModelInfo {
     let info = LiteRTLMModelInfo()
     let native = ModelRegistry.gemma4E4B
@@ -78,7 +76,6 @@ public class LiteRTLMModelInfo: TiProxy {
     return info
   }
 
-  @objc
   public func toNative() -> ModelInfo {
     if let native = _nativeModel {
       return native

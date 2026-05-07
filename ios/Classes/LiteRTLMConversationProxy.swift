@@ -30,7 +30,7 @@ public class LiteRTLMConversationProxy: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
@@ -248,7 +248,6 @@ public class LiteRTLMConversationProxy: TiProxy {
     fireEvent("close", withObject: [:])
   }
 
-  @objc
   public func getBenchmarkInfo() -> [String: Any]? {
     guard let conversation = _conversation else { return nil }
     guard let info = conversation.benchmarkInfo() else { return nil }

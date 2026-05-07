@@ -27,12 +27,11 @@ public class LiteRTLMMessage: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public static func user(_ text: String) -> LiteRTLMMessage {
     let msg = LiteRTLMMessage()
     msg._role = "user"
@@ -40,7 +39,6 @@ public class LiteRTLMMessage: TiProxy {
     return msg
   }
 
-  @objc
   public static func model(_ text: String) -> LiteRTLMMessage {
     let msg = LiteRTLMMessage()
     msg._role = "model"
@@ -48,7 +46,6 @@ public class LiteRTLMMessage: TiProxy {
     return msg
   }
 
-  @objc
   public static func system(_ text: String) -> LiteRTLMMessage {
     let msg = LiteRTLMMessage()
     msg._role = "system"
@@ -56,7 +53,6 @@ public class LiteRTLMMessage: TiProxy {
     return msg
   }
 
-  @objc
   public func toNative() -> Message {
     let contents = _contents.map { $0.toNative() }
     return Message(role: Role(rawValue: _role) ?? .user, content: contents)

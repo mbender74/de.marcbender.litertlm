@@ -51,12 +51,11 @@ public class LiteRTLMContent: TiProxy {
   }
 
   @objc
-  override func _init(withPageContext context: TiEvaluator!) -> Self? {
+  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
     super._init(withPageContext: context)
     return self
   }
 
-  @objc
   public static func text(_ value: String) -> LiteRTLMContent {
     let content = LiteRTLMContent()
     content._type = "text"
@@ -64,7 +63,6 @@ public class LiteRTLMContent: TiProxy {
     return content
   }
 
-  @objc
   public static func image(_ data: Data) -> LiteRTLMContent {
     let content = LiteRTLMContent()
     content._type = "image"
@@ -72,7 +70,6 @@ public class LiteRTLMContent: TiProxy {
     return content
   }
 
-  @objc
   public static func audio(_ data: Data, format: String) -> LiteRTLMContent {
     let content = LiteRTLMContent()
     content._type = "audio"
@@ -81,7 +78,6 @@ public class LiteRTLMContent: TiProxy {
     return content
   }
 
-  @objc
   public func toNative() -> Content {
     switch _type {
     case "image":
