@@ -24,9 +24,7 @@ import TitaniumKit
 ///     let config = EngineConfiguration(modelPath: path)
 /// }
 /// ```
-#if swift(5.9) && os(iOS)
 @Observable
-#endif
 public final class ModelDownloader: @unchecked Sendable {
 
     // MARK: - Public State

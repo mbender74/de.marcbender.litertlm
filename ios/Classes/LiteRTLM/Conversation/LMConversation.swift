@@ -2,7 +2,7 @@
 import CLiteRTLM
 import UIKit
 import TitaniumKit
-import os
+import os.log
 private let logger = Logger(subsystem: "com.litertlm", category: "conversation")
 
 /// A multi-turn conversation with automatic history, multimodal support, and tool calling.
