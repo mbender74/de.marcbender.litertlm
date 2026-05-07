@@ -17,44 +17,24 @@ public class LiteRTLMEngineProxy: TiProxy {
   private var _lastError: String?
   private var _configuration: EngineConfiguration?
 
-  @objc public private(set) var status: String = "notLoaded"
-
-  @objc public func getStatus() -> String {
-    return _status
+  @objc public var status: String {
+      get { return _status }
+      set { _status = newValue; replaceValue(newValue, forKey: "status", notification: false) }
   }
 
-  @objc public func setStatus(_ value: String) {
-    _status = value
+  @objc public var isReady: Bool {
+      get { return _isReady }
+      set { _isReady = newValue; replaceValue(newValue, forKey: "isReady", notification: false) }
   }
 
-  @objc public private(set) var isReady: Bool = false
-
-  @objc public func getIsReady() -> Bool {
-    return _isReady
+  @objc public var lastError: String? {
+      get { return _lastError }
+      set { _lastError = newValue; replaceValue(newValue, forKey: "lastError", notification: false) }
   }
 
-  @objc public func setIsReady(_ value: Bool) {
-    _isReady = value
-  }
-
-  @objc public private(set) var lastError: String?
-
-  @objc public func getLastError() -> String? {
-    return _lastError
-  }
-
-  @objc public func setLastError(_ value: String?) {
-    _lastError = value
-  }
-
-  @objc public private(set) var configuration: EngineConfiguration?
-
-  @objc public func getConfiguration() -> EngineConfiguration? {
-    return _configuration
-  }
-
-  @objc public func setConfiguration(_ value: EngineConfiguration?) {
-    _configuration = value
+  @objc public var configuration: EngineConfiguration? {
+      get { return _configuration }
+      set { _configuration = newValue; replaceValue(newValue, forKey: "configuration", notification: false) }
   }
 
   @objc

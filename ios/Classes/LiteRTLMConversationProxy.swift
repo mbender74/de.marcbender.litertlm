@@ -17,24 +17,14 @@ public class LiteRTLMConversationProxy: TiProxy {
   private var _configuration: LiteRTLMConversationConfiguration?
   private var _history: [LiteRTLMMessage] = []
 
-  @objc public private(set) var isActive: Bool = false
-
-  @objc public func getIsActive() -> Bool {
-    return _isActive
+  @objc public var isActive: Bool {
+      get { return _isActive }
+      set { _isActive = newValue; replaceValue(newValue, forKey: "isActive", notification: false) }
   }
 
-  @objc public func setIsActive(_ value: Bool) {
-    _isActive = value
-  }
-
-  @objc public private(set) var history: [LiteRTLMMessage] = []
-
-  @objc public func getHistory() -> [LiteRTLMMessage] {
-    return _history
-  }
-
-  @objc public func setHistory(_ value: [LiteRTLMMessage]) {
-    _history = value
+  @objc public var history: [LiteRTLMMessage] {
+      get { return _history }
+      set { _history = newValue; replaceValue(newValue, forKey: "history", notification: false) }
   }
 
   @objc

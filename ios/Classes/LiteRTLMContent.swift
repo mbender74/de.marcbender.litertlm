@@ -18,64 +18,34 @@ public class LiteRTLMContent: TiProxy {
   private var _audioFormat: String = "wav"
   private var _maxDimension: Int = 1024
 
-  @objc public private(set) var type: String = "text"
-
-  @objc public func getType() -> String {
-    return _type
+  @objc public var type: String {
+      get { return _type }
+      set { _type = newValue; replaceValue(newValue, forKey: "type", notification: false) }
   }
 
-  @objc public func setType(_ value: String) {
-    _type = value
+  @objc public var text: String? {
+      get { return _text }
+      set { _text = newValue; replaceValue(newValue, forKey: "text", notification: false) }
   }
 
-  @objc public private(set) var text: String?
-
-  @objc public func getText() -> String? {
-    return _text
+  @objc public var imageData: Data? {
+      get { return _imageData }
+      set { _imageData = newValue; replaceValue(newValue, forKey: "imageData", notification: false) }
   }
 
-  @objc public func setText(_ value: String?) {
-    _text = value
+  @objc public var audioData: Data? {
+      get { return _audioData }
+      set { _audioData = newValue; replaceValue(newValue, forKey: "audioData", notification: false) }
   }
 
-  @objc public private(set) var imageData: Data?
-
-  @objc public func getImageData() -> Data? {
-    return _imageData
+  @objc public var audioFormat: String {
+      get { return _audioFormat }
+      set { _audioFormat = newValue; replaceValue(newValue, forKey: "audioFormat", notification: false) }
   }
 
-  @objc public func setImageData(_ value: Data?) {
-    _imageData = value
-  }
-
-  @objc public private(set) var audioData: Data?
-
-  @objc public func getAudioData() -> Data? {
-    return _audioData
-  }
-
-  @objc public func setAudioData(_ value: Data?) {
-    _audioData = value
-  }
-
-  @objc public private(set) var audioFormat: String = "wav"
-
-  @objc public func getAudioFormat() -> String {
-    return _audioFormat
-  }
-
-  @objc public func setAudioFormat(_ value: String) {
-    _audioFormat = value
-  }
-
-  @objc public private(set) var maxDimension: Int = 1024
-
-  @objc public func getMaxDimension() -> Int {
-    return _maxDimension
-  }
-
-  @objc public func setMaxDimension(_ value: Int) {
-    _maxDimension = value
+  @objc public var maxDimension: Int {
+      get { return _maxDimension }
+      set { _maxDimension = newValue; replaceValue(newValue, forKey: "maxDimension", notification: false) }
   }
 
   @objc

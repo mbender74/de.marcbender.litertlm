@@ -17,54 +17,29 @@ public class LiteRTLMSamplerConfiguration: TiProxy {
   private var _seed: Int32 = -1
   private var _samplerType: String = "topK"
 
-  @objc public private(set) var temperature: Float = 0.7
-
-  @objc public func getTemperature() -> Double {
-    return Double(_temperature)
+  @objc public var temperature: Float {
+      get { return _temperature }
+      set { _temperature = newValue; replaceValue(newValue, forKey: "temperature", notification: false) }
   }
 
-  @objc public func setTemperature(_ value: Double) {
-    _temperature = Float(value)
+  @objc public var topK: Int32 {
+      get { return _topK }
+      set { _topK = newValue; replaceValue(newValue, forKey: "topK", notification: false) }
   }
 
-  @objc public private(set) var topK: Int32 = 40
-
-  @objc public func getTopK() -> Int32 {
-    return _topK
+  @objc public var topP: Float {
+      get { return _topP }
+      set { _topP = newValue; replaceValue(newValue, forKey: "topP", notification: false) }
   }
 
-  @objc public func setTopK(_ value: Int32) {
-    _topK = value
+  @objc public var seed: Int32 {
+      get { return _seed }
+      set { _seed = newValue; replaceValue(newValue, forKey: "seed", notification: false) }
   }
 
-  @objc public private(set) var topP: Float = 0.95
-
-  @objc public func getTopP() -> Double {
-    return Double(_topP)
-  }
-
-  @objc public func setTopP(_ value: Double) {
-    _topP = Float(value)
-  }
-
-  @objc public private(set) var seed: Int32 = -1
-
-  @objc public func getSeed() -> Int32 {
-    return _seed
-  }
-
-  @objc public func setSeed(_ value: Int32) {
-    _seed = value
-  }
-
-  @objc public private(set) var samplerType: String = "topK"
-
-  @objc public func getSamplerType() -> String {
-    return _samplerType
-  }
-
-  @objc public func setSamplerType(_ value: String) {
-    _samplerType = value
+  @objc public var samplerType: String {
+      get { return _samplerType }
+      set { _samplerType = newValue; replaceValue(newValue, forKey: "samplerType", notification: false) }
   }
 
   @objc

@@ -15,14 +15,9 @@ public class LiteRTLMModelDownloaderProxy: TiProxy {
   private var _downloader: ModelDownloader?
   private var _modelsDirectory: String?
 
-  @objc public private(set) var modelsDirectory: String?
-
-  @objc public func getModelsDirectoryObjc() -> String? {
-    return _modelsDirectory
-  }
-
-  @objc public func setModelsDirectory(_ value: String?) {
-    _modelsDirectory = value
+  @objc public var modelsDirectory: String? {
+      get { return _modelsDirectory }
+      set { _modelsDirectory = newValue; replaceValue(newValue, forKey: "modelsDirectory", notification: false) }
   }
 
   @objc

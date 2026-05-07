@@ -18,64 +18,34 @@ public class LiteRTLMConversationConfiguration: TiProxy {
   private var _maxImageDimension: Int = 1024
   private var _systemPrompt: String?
 
-  @objc public private(set) var maxOutputTokens: Int32 = 1024
-
-  @objc public func getMaxOutputTokens() -> Int32 {
-    return _maxOutputTokens
+  @objc public var maxOutputTokens: Int32 {
+      get { return _maxOutputTokens }
+      set { _maxOutputTokens = newValue; replaceValue(newValue, forKey: "maxOutputTokens", notification: false) }
   }
 
-  @objc public func setMaxOutputTokens(_ value: Int32) {
-    _maxOutputTokens = value
+  @objc public var samplerType: String {
+      get { return _samplerType }
+      set { _samplerType = newValue; replaceValue(newValue, forKey: "samplerType", notification: false) }
   }
 
-  @objc public private(set) var samplerType: String = "balanced"
-
-  @objc public func getSamplerType() -> String {
-    return _samplerType
+  @objc public var tools: [LiteRTLMTool] {
+      get { return _tools }
+      set { _tools = newValue; replaceValue(newValue, forKey: "tools", notification: false) }
   }
 
-  @objc public func setSamplerType(_ value: String) {
-    _samplerType = value
+  @objc public var toolExecutionMode: String {
+      get { return _toolExecutionMode }
+      set { _toolExecutionMode = newValue; replaceValue(newValue, forKey: "toolExecutionMode", notification: false) }
   }
 
-  @objc public private(set) var tools: [LiteRTLMTool] = []
-
-  @objc public func getTools() -> [LiteRTLMTool] {
-    return _tools
+  @objc public var maxImageDimension: Int {
+      get { return _maxImageDimension }
+      set { _maxImageDimension = newValue; replaceValue(newValue, forKey: "maxImageDimension", notification: false) }
   }
 
-  @objc public func setTools(_ value: [LiteRTLMTool]) {
-    _tools = value
-  }
-
-  @objc public private(set) var toolExecutionMode: String = "automatic"
-
-  @objc public func getToolExecutionMode() -> String {
-    return _toolExecutionMode
-  }
-
-  @objc public func setToolExecutionMode(_ value: String) {
-    _toolExecutionMode = value
-  }
-
-  @objc public private(set) var maxImageDimension: Int = 1024
-
-  @objc public func getMaxImageDimension() -> Int {
-    return _maxImageDimension
-  }
-
-  @objc public func setMaxImageDimension(_ value: Int) {
-    _maxImageDimension = value
-  }
-
-  @objc public private(set) var systemPrompt: String?
-
-  @objc public func getSystemPrompt() -> String? {
-    return _systemPrompt
-  }
-
-  @objc public func setSystemPrompt(_ value: String?) {
-    _systemPrompt = value
+  @objc public var systemPrompt: String? {
+      get { return _systemPrompt }
+      set { _systemPrompt = newValue; replaceValue(newValue, forKey: "systemPrompt", notification: false) }
   }
 
   @objc public var sampler: LiteRTLMSamplerConfiguration?

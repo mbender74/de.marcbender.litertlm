@@ -18,14 +18,9 @@ public class LiteRTLMSessionProxy: TiProxy {
   private var _activeTasks: [String: Task<String, Error>] = [:]
   private var _taskCounter: Int = 0
 
-  @objc public private(set) var isActive: Bool = false
-
-  @objc public func getIsActive() -> Bool {
-    return _isActive
-  }
-
-  @objc public func setIsActive(_ value: Bool) {
-    _isActive = value
+  @objc public var isActive: Bool {
+      get { return _isActive }
+      set { _isActive = newValue; replaceValue(newValue, forKey: "isActive", notification: false) }
   }
 
   @objc

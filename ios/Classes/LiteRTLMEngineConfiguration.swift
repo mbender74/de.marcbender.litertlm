@@ -20,84 +20,44 @@ public class LiteRTLMEngineConfiguration: TiProxy {
   private var _isBenchmarkEnabled: Bool = false
   private var _logLevel: String = "warning"
 
-  @objc public private(set) var modelPath: String = ""
-
-  @objc public func getModelPath() -> String {
-    return _modelPath
+  @objc public var modelPath: String {
+      get { return _modelPath }
+      set { _modelPath = newValue; replaceValue(newValue, forKey: "modelPath", notification: false) }
   }
 
-  @objc public func setModelPath(_ value: String) {
-    _modelPath = value
+  @objc public var primaryBackend: String {
+      get { return _primaryBackend }
+      set { _primaryBackend = newValue; replaceValue(newValue, forKey: "primaryBackend", notification: false) }
   }
 
-  @objc public private(set) var primaryBackend: String = "cpu"
-
-  @objc public func getPrimaryBackend() -> String {
-    return _primaryBackend
+  @objc public var visionBackend: String? {
+      get { return _visionBackend }
+      set { _visionBackend = newValue; replaceValue(newValue, forKey: "visionBackend", notification: false) }
   }
 
-  @objc public func setPrimaryBackend(_ value: String) {
-    _primaryBackend = value
+  @objc public var audioBackend: String? {
+      get { return _audioBackend }
+      set { _audioBackend = newValue; replaceValue(newValue, forKey: "audioBackend", notification: false) }
   }
 
-  @objc public private(set) var visionBackend: String?
-
-  @objc public func getVisionBackend() -> String? {
-    return _visionBackend
+  @objc public var maxTokens: Int32? {
+      get { return _maxTokens }
+      set { _maxTokens = newValue; replaceValue(newValue, forKey: "maxTokens", notification: false) }
   }
 
-  @objc public func setVisionBackend(_ value: String?) {
-    _visionBackend = value
+  @objc public var cacheDir: String? {
+      get { return _cacheDir }
+      set { _cacheDir = newValue; replaceValue(newValue, forKey: "cacheDir", notification: false) }
   }
 
-  @objc public private(set) var audioBackend: String?
-
-  @objc public func getAudioBackend() -> String? {
-    return _audioBackend
+  @objc public var isBenchmarkEnabled: Bool {
+      get { return _isBenchmarkEnabled }
+      set { _isBenchmarkEnabled = newValue; replaceValue(newValue, forKey: "isBenchmarkEnabled", notification: false) }
   }
 
-  @objc public func setAudioBackend(_ value: String?) {
-    _audioBackend = value
-  }
-
-  @objc public private(set) var maxTokens: Int32?
-
-  @objc public func getMaxTokens() -> Int32? {
-    return _maxTokens
-  }
-
-  @objc public func setMaxTokens(_ value: Int32?) {
-    _maxTokens = value
-  }
-
-  @objc public private(set) var cacheDir: String?
-
-  @objc public func getCacheDir() -> String? {
-    return _cacheDir
-  }
-
-  @objc public func setCacheDir(_ value: String?) {
-    _cacheDir = value
-  }
-
-  @objc public private(set) var isBenchmarkEnabled: Bool = false
-
-  @objc public func getIsBenchmarkEnabled() -> Bool {
-    return _isBenchmarkEnabled
-  }
-
-  @objc public func setIsBenchmarkEnabled(_ value: Bool) {
-    _isBenchmarkEnabled = value
-  }
-
-  @objc public private(set) var logLevel: String = "warning"
-
-  @objc public func getLogLevel() -> String {
-    return _logLevel
-  }
-
-  @objc public func setLogLevel(_ value: String) {
-    _logLevel = value
+  @objc public var logLevel: String {
+      get { return _logLevel }
+      set { _logLevel = newValue; replaceValue(newValue, forKey: "logLevel", notification: false) }
   }
 
   @objc

@@ -14,24 +14,14 @@ public class LiteRTLMMessage: TiProxy {
   private var _role: String = "user"
   private var _contents: [LiteRTLMContent] = []
 
-  @objc public private(set) var role: String = "user"
-
-  @objc public func getRole() -> String {
-    return _role
+  @objc public var role: String {
+      get { return _role }
+      set { _role = newValue; replaceValue(newValue, forKey: "role", notification: false) }
   }
 
-  @objc public func setRole(_ value: String) {
-    _role = value
-  }
-
-  @objc public private(set) var contents: [LiteRTLMContent] = []
-
-  @objc public func getContents() -> [LiteRTLMContent] {
-    return _contents
-  }
-
-  @objc public func setContents(_ value: [LiteRTLMContent]) {
-    _contents = value
+  @objc public var contents: [LiteRTLMContent] {
+      get { return _contents }
+      set { _contents = newValue; replaceValue(newValue, forKey: "contents", notification: false) }
   }
 
   @objc
