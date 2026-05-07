@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Typed errors for all LiteRTLM operations.
 public enum LiteRTLMError: LocalizedError, Sendable {
 

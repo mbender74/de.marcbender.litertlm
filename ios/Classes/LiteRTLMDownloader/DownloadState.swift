@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Download lifecycle state.
 public enum DownloadState: Sendable, Equatable {
     /// No download in progress or completed.

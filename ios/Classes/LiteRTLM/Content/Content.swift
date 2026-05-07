@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// A piece of content that can be sent to the model.
 ///
 /// ```swift

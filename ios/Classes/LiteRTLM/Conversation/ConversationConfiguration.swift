@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// How tool calls from the model are handled.
 public enum ToolExecutionMode: Sendable {
     /// SDK automatically calls the tool and feeds the result back to the model.

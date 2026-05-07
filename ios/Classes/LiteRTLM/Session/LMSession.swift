@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// A generation session with KV-cache persistence for multi-turn text generation.
 ///
 /// ```swift

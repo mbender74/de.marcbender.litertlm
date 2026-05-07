@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Hardware backend for inference.
 public enum Backend: String, Sendable {
     case cpu = "cpu"

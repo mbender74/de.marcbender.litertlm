@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Metadata about a downloadable model.
 public struct ModelInfo: Sendable, Identifiable {
     public var id: String { name }

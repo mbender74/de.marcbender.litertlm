@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Performance metrics collected during inference.
 public struct BenchmarkInfo: Sendable {
 

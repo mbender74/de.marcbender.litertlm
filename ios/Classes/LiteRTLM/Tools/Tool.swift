@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// A tool (function) that the model can call during generation.
 ///
 /// ```swift

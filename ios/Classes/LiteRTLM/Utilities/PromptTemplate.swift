@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Prompt formatting utilities for supported model families.
 public enum PromptTemplate: Sendable {
 

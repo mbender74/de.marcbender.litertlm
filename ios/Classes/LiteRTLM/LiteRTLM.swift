@@ -41,6 +41,8 @@
 //   conversation.close()
 //   engine.unload()
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 // All public types (LMEngine, LMSession, LMConversation, TokenStream, Tool,
 // Content, Message, BenchmarkInfo, configurations, errors, etc.) are available
 // via a single `import LiteRTLM`.

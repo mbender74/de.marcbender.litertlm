@@ -6,6 +6,8 @@
 //  Copyright (c) 2026 by Your Company. All rights reserved.
 //
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 
 
 @objc(LiteRTLMEngineProxy)
@@ -32,7 +34,7 @@ public class LiteRTLMEngineProxy: TiProxy {
       set { _lastError = newValue; replaceValue(newValue, forKey: "lastError", notification: false) }
   }
 
-  @objc public var configuration: EngineConfiguration? {
+  public var configuration: EngineConfiguration? {
       get { return _configuration }
       set { _configuration = newValue; replaceValue(newValue, forKey: "configuration", notification: false) }
   }

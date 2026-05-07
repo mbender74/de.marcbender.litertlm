@@ -1,5 +1,7 @@
 
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Sampling strategy for text generation.
 public struct SamplerConfiguration: Sendable {
     public var temperature: Float

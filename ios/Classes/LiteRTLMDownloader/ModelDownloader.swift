@@ -1,6 +1,8 @@
 
 import os.log
 import CLiteRTLM
+import UIKit
+import TitaniumKit
 /// Downloads and manages `.litertlm` model files on disk.
 ///
 /// Observable for SwiftUI integration. Supports pause, resume, and cancel.
@@ -22,7 +24,9 @@ import CLiteRTLM
 ///     let config = EngineConfiguration(modelPath: path)
 /// }
 /// ```
+#if swift(5.9) && os(iOS)
 @Observable
+#endif
 public final class ModelDownloader: @unchecked Sendable {
 
     // MARK: - Public State
