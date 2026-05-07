@@ -1,0 +1,11 @@
+framework module DeMarcbenderLitertlm {
+  umbrella header "DeMarcbenderLitertlm.h"
+  export *
+
+  module * { export * }
+}
+
+module DeMarcbenderLitertlm.Swift {
+  header "DeMarcbenderLitertlm-Swift.h"
+  requires objc
+}

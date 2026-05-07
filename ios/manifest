@@ -5,7 +5,7 @@
 version: 1.0.0
 apiversion: 2
 architectures: arm64
-mac: true
+mac: false
 description: Titanium module for LiteRTLM - On-device LLM inference on iOS
 author: Marc Bender
 license: Apache 2.0
