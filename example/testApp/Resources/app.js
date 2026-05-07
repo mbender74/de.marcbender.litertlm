@@ -91,7 +91,6 @@ var statusLabel = Ti.UI.createLabel({
     left: 10,
     width: 220
 });
-});
 
 // Header-Buttons (Rechts)
 var toolsButton = Ti.UI.createButton({
@@ -127,6 +126,8 @@ var chatTableView = Ti.UI.createTableView({
     layout: 'vertical',
     top: 0,
     bottom: 180,
+    left: 0,
+    right: 0,
     separatorColor: 'transparent',
     hasUnread: false
 });
@@ -258,7 +259,9 @@ var downloadView = Ti.UI.createView({
     layout: 'vertical',
     height: 44,
     top: 10,
-    bottom: 10
+    bottom: 10,
+    left: 0,
+    right: 0,
 });
 
 var progressLabel = Ti.UI.createLabel({
@@ -287,7 +290,9 @@ var loadModelView = Ti.UI.createView({
     layout: 'vertical',
     height: 44,
     top: 10,
-    bottom: 10
+    bottom: 10,
+    left: 0,
+    right: 0,
 });
 
 // Backend-Auswahl
@@ -354,7 +359,6 @@ var loadModelButton = Ti.UI.createButton({
 loadModelView.add(backendLabel);
 loadModelView.add(backendPicker);
 loadModelView.add(backendInfo);
-loadModelView.add(loadModelView);
 loadModelView.add(loadModelButton);
 
 // ============================================================
@@ -1171,7 +1175,7 @@ mainWin.add(loadModelView);
 mainWin.add(inputBar);
 
 // Initiale Message-Liste rendern
-renderAllMessages();
+//renderAllMessages();
 
 // Fenster anzeigen
 mainWin.open();
