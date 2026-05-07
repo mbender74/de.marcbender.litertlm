@@ -1,0 +1,822 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.2.4 effective-5.10 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
+// swift-module-flags: -target arm64-apple-ios17.6 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name DeMarcbenderLitertlm
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.4
+import CLiteRTLM
+@_exported import DeMarcbenderLitertlm
+import Swift
+import TitaniumKit
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+import os.log
+import os
+public struct ModelInfo : Swift.Sendable, Swift.Identifiable {
+  public var id: Swift.String {
+    get
+  }
+  public let name: Swift.String
+  public let displayName: Swift.String
+  public let url: Foundation.URL
+  public let expectedSize: Swift.Int64?
+  public let fileName: Swift.String
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(name: Swift.String, displayName: Swift.String, url: Foundation.URL, expectedSize: Swift.Int64? = nil, fileName: Swift.String? = nil)
+  #endif
+  public typealias ID = Swift.String
+}
+public enum ModelRegistry {
+  public static let gemma4E2B: DeMarcbenderLitertlm.ModelInfo
+  public static let gemma4E4B: DeMarcbenderLitertlm.ModelInfo
+}
+@_hasMissingDesignatedInitializers final public class LMSession : @unchecked Swift.Sendable {
+  @objc deinit
+  final public var isActive: Swift.Bool {
+    get
+  }
+  final public func close()
+  final public func generate(_ prompt: Swift.String, template: DeMarcbenderLitertlm.PromptTemplate = .gemma) async throws -> Swift.String
+  final public func generateStream(_ prompt: Swift.String, template: DeMarcbenderLitertlm.PromptTemplate = .gemma) -> DeMarcbenderLitertlm.TokenStream
+  final public func generate(text: Swift.String, images: [Foundation.Data] = [], audio: [Foundation.Data] = [], template: DeMarcbenderLitertlm.PromptTemplate = .gemma) async throws -> Swift.String
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func benchmarkInfo() -> DeMarcbenderLitertlm.BenchmarkInfo?
+  #endif
+}
+extension DeMarcbenderLitertlm.LMEngine {
+  public func createSession(configuration: DeMarcbenderLitertlm.SessionConfiguration = SessionConfiguration()) async throws -> DeMarcbenderLitertlm.LMSession
+}
+@_hasMissingDesignatedInitializers final public class LMConversation : @unchecked Swift.Sendable {
+  final public var history: [DeMarcbenderLitertlm.Message] {
+    get
+  }
+  @objc deinit
+  final public var isActive: Swift.Bool {
+    get
+  }
+  final public func close()
+  final public func cancel()
+  final public func send(_ text: Swift.String) async throws -> Swift.String
+  final public func send(_ text: Swift.String, images: [Foundation.Data] = [], audio: [Foundation.Data] = [], audioFormat: DeMarcbenderLitertlm.AudioFormat = .wav) async throws -> Swift.String
+  final public func sendStream(_ text: Swift.String, images: [Foundation.Data] = [], audio: [Foundation.Data] = [], audioFormat: DeMarcbenderLitertlm.AudioFormat = .wav) throws -> DeMarcbenderLitertlm.TokenStream
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func benchmarkInfo() -> DeMarcbenderLitertlm.BenchmarkInfo?
+  #endif
+}
+extension DeMarcbenderLitertlm.LMEngine {
+  public func createConversation(configuration: DeMarcbenderLitertlm.ConversationConfiguration = ConversationConfiguration()) async throws -> DeMarcbenderLitertlm.LMConversation
+}
+public enum PromptTemplate : Swift.Sendable {
+  case gemma
+  case gemmaLegacy
+  case raw
+  public func formatSingle(_ prompt: Swift.String) -> Swift.String
+  public func formatConversation(_ messages: [DeMarcbenderLitertlm.Message]) -> Swift.String
+  public static func == (a: DeMarcbenderLitertlm.PromptTemplate, b: DeMarcbenderLitertlm.PromptTemplate) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMConversationProxy) public class LiteRTLMConversationProxy : TitaniumKit.TiProxy {
+  @objc public var isActive: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var history: [DeMarcbenderLitertlm.LiteRTLMMessage] {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  @objc public func send(_ text: Swift.String)
+  @objc public func sendMultimodal(_ text: Swift.String, images: [[Swift.String : Any]], audio: [[Swift.String : Any]], audioFormat: Swift.String)
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func sendStream(_ text: Swift.String, images: [[Swift.String : Any]]?, audio: [[Swift.String : Any]]?, audioFormat: Swift.String)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func collectStream(_ text: Swift.String, images: [[Swift.String : Any]]?, audio: [[Swift.String : Any]]?, audioFormat: Swift.String)
+  #endif
+  @objc public func cancel()
+  @objc public func close()
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func getBenchmarkInfo() -> [Swift.String : Any]?
+  #endif
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMEngineProxy) public class LiteRTLMEngineProxy : TitaniumKit.TiProxy {
+  @objc public var status: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var isReady: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var lastError: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var configuration: DeMarcbenderLitertlm.EngineConfiguration? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  @objc public func load()
+  @objc public func unload()
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func createSession(_ configuration: DeMarcbenderLitertlm.LiteRTLMSessionConfiguration?)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func createConversation(_ configuration: DeMarcbenderLitertlm.LiteRTLMConversationConfiguration?)
+  #endif
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMMessage) public class LiteRTLMMessage : TitaniumKit.TiProxy {
+  @objc public var role: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var contents: [DeMarcbenderLitertlm.LiteRTLMContent] {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public static func user(_ text: Swift.String) -> DeMarcbenderLitertlm.LiteRTLMMessage
+  public static func model(_ text: Swift.String) -> DeMarcbenderLitertlm.LiteRTLMMessage
+  public static func system(_ text: Swift.String) -> DeMarcbenderLitertlm.LiteRTLMMessage
+  public func toNative() -> DeMarcbenderLitertlm.Message
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMSamplerConfiguration) public class LiteRTLMSamplerConfiguration : TitaniumKit.TiProxy {
+  @objc public var temperature: Swift.Float {
+    @objc get
+    @objc set
+  }
+  @objc public var topK: Swift.Int32 {
+    @objc get
+    @objc set
+  }
+  @objc public var topP: Swift.Float {
+    @objc get
+    @objc set
+  }
+  @objc public var seed: Swift.Int32 {
+    @objc get
+    @objc set
+  }
+  @objc public var samplerType: Swift.String {
+    @objc get
+    @objc set
+  }
+  public static func greedy() -> DeMarcbenderLitertlm.LiteRTLMSamplerConfiguration
+  public static func balanced() -> DeMarcbenderLitertlm.LiteRTLMSamplerConfiguration
+  public static func creative() -> DeMarcbenderLitertlm.LiteRTLMSamplerConfiguration
+  public func toNative() -> DeMarcbenderLitertlm.SamplerConfiguration
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMModelDownloaderProxy) public class LiteRTLMModelDownloaderProxy : TitaniumKit.TiProxy {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var modelsDirectory: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc convenience public init?(modelsDirectory: Swift.String?)
+  #endif
+  @objc public func download(_ modelInfo: DeMarcbenderLitertlm.LiteRTLMModelInfo)
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func downloadFrom(_ url: Swift.String, fileName: Swift.String?, expectedSize: Swift.Int64?)
+  #endif
+  @objc public func pause()
+  @objc public func cancel()
+  @objc public func isDownloaded(_ modelInfo: DeMarcbenderLitertlm.LiteRTLMModelInfo) -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func modelPath(_ modelInfo: DeMarcbenderLitertlm.LiteRTLMModelInfo) -> Swift.String?
+  #endif
+  @objc public func deleteModel(_ modelInfo: DeMarcbenderLitertlm.LiteRTLMModelInfo)
+  @objc public func deleteModelByFileName(_ fileName: Swift.String)
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func getModelsDirectory() -> Swift.String?
+  #endif
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMSessionProxy) public class LiteRTLMSessionProxy : TitaniumKit.TiProxy {
+  @objc public var isActive: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func generate(_ prompt: Swift.String, template: Swift.String?)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func generateMultimodal(_ text: Swift.String, images: [[Swift.String : Any]], audio: [[Swift.String : Any]], template: Swift.String?)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func generateStream(_ prompt: Swift.String, template: Swift.String?)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func collectStream(_ prompt: Swift.String, template: Swift.String?)
+  #endif
+  @objc public func close()
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func getBenchmarkInfo() -> [Swift.String : Any]?
+  #endif
+  @objc override dynamic public init()
+  @objc deinit
+}
+public enum Content : Swift.Sendable {
+  case text(Swift.String)
+  case image(Foundation.Data, maxDimension: Swift.Int = 1024)
+  case audio(Foundation.Data, format: DeMarcbenderLitertlm.AudioFormat)
+}
+public enum AudioFormat : Swift.String, Swift.Sendable {
+  case wav
+  case flac
+  case mp3
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.String)
+  #endif
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum Role : Swift.String, Swift.Sendable, Swift.Codable {
+  case user
+  case model
+  case system
+  case tool
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.String)
+  #endif
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct Message : Swift.Sendable {
+  public let role: DeMarcbenderLitertlm.Role
+  public let content: [DeMarcbenderLitertlm.Content]
+  public init(role: DeMarcbenderLitertlm.Role, content: [DeMarcbenderLitertlm.Content])
+  public static func user(_ text: Swift.String) -> DeMarcbenderLitertlm.Message
+  public static func model(_ text: Swift.String) -> DeMarcbenderLitertlm.Message
+  public static func system(_ text: Swift.String) -> DeMarcbenderLitertlm.Message
+}
+public struct TokenStream : _Concurrency.AsyncSequence, Swift.Sendable {
+  public typealias Element = Swift.String
+  public func makeAsyncIterator() -> DeMarcbenderLitertlm.TokenStream.AsyncIterator
+  public struct AsyncIterator : _Concurrency.AsyncIteratorProtocol {
+    #if compiler(>=5.3) && $NonescapableTypes
+    public mutating func next() async throws -> Swift.String?
+    #endif
+    public typealias Element = Swift.String
+    @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+    @_implements(_Concurrency.AsyncIteratorProtocol, Failure) public typealias __AsyncIteratorProtocol_Failure = any Swift.Error
+  }
+  public func collect() async throws -> Swift.String
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = any Swift.Error
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMConversationConfiguration) public class LiteRTLMConversationConfiguration : TitaniumKit.TiProxy {
+  @objc public var maxOutputTokens: Swift.Int32 {
+    @objc get
+    @objc set
+  }
+  @objc public var samplerType: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var tools: [DeMarcbenderLitertlm.LiteRTLMTool] {
+    @objc get
+    @objc set
+  }
+  @objc public var toolExecutionMode: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var maxImageDimension: Swift.Int {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var systemPrompt: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  public var sampler: DeMarcbenderLitertlm.LiteRTLMSamplerConfiguration?
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public func toNative() -> DeMarcbenderLitertlm.ConversationConfiguration
+  @objc override dynamic public init()
+  @objc deinit
+}
+public enum LiteRTLMError : Foundation.LocalizedError, Swift.Sendable {
+  case engineCreationFailed(reason: Swift.String)
+  case engineNotReady
+  case engineAlreadyLoaded
+  case sessionCreationFailed
+  case noActiveSession
+  case sessionAlreadyOpen
+  case conversationCreationFailed
+  case noActiveConversation
+  case conversationAlreadyOpen
+  case emptyResponse
+  case streamingError(message: Swift.String)
+  case cancelled
+  case invalidInput(detail: Swift.String)
+  case imageProcessingFailed
+  case unsupportedAudioFormat(Swift.String)
+  case modelNotFound(path: Swift.String)
+  case internalError(Swift.String)
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var errorDescription: Swift.String? {
+    get
+  }
+  #endif
+}
+public struct SamplerConfiguration : Swift.Sendable {
+  public var temperature: Swift.Float
+  public var topK: Swift.Int32
+  public var topP: Swift.Float
+  public var seed: Swift.Int32
+  public var samplerType: DeMarcbenderLitertlm.SamplerConfiguration.SamplerType
+  public enum SamplerType : Swift.Sendable {
+    case topK
+    case topP
+    case greedy
+    public static func == (a: DeMarcbenderLitertlm.SamplerConfiguration.SamplerType, b: DeMarcbenderLitertlm.SamplerConfiguration.SamplerType) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+  public static let greedy: DeMarcbenderLitertlm.SamplerConfiguration
+  public static let balanced: DeMarcbenderLitertlm.SamplerConfiguration
+  public static let creative: DeMarcbenderLitertlm.SamplerConfiguration
+  public init(temperature: Swift.Float = 0.7, topK: Swift.Int32 = 40, topP: Swift.Float = 0.95, seed: Swift.Int32 = 0, samplerType: DeMarcbenderLitertlm.SamplerConfiguration.SamplerType = .topK)
+}
+public struct SessionConfiguration : Swift.Sendable {
+  public var maxOutputTokens: Swift.Int32 {
+    get
+  }
+  public var sampler: DeMarcbenderLitertlm.SamplerConfiguration {
+    get
+  }
+  public init()
+  public func maxOutputTokens(_ count: Swift.Int32) -> DeMarcbenderLitertlm.SessionConfiguration
+  public func sampler(_ sampler: DeMarcbenderLitertlm.SamplerConfiguration) -> DeMarcbenderLitertlm.SessionConfiguration
+}
+public enum ToolExecutionMode : Swift.Sendable {
+  case automatic
+  case manual
+  public static func == (a: DeMarcbenderLitertlm.ToolExecutionMode, b: DeMarcbenderLitertlm.ToolExecutionMode) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct ConversationConfiguration : Swift.Sendable {
+  public var maxOutputTokens: Swift.Int32 {
+    get
+  }
+  public var sampler: DeMarcbenderLitertlm.SamplerConfiguration {
+    get
+  }
+  public var tools: [DeMarcbenderLitertlm.Tool] {
+    get
+  }
+  public var toolExecutionMode: DeMarcbenderLitertlm.ToolExecutionMode {
+    get
+  }
+  public var maxImageDimension: Swift.Int {
+    get
+  }
+  public var systemPrompt: Swift.String? {
+    get
+  }
+  public init()
+  public func maxOutputTokens(_ count: Swift.Int32) -> DeMarcbenderLitertlm.ConversationConfiguration
+  public func sampler(_ sampler: DeMarcbenderLitertlm.SamplerConfiguration) -> DeMarcbenderLitertlm.ConversationConfiguration
+  public func tools(_ tools: [DeMarcbenderLitertlm.Tool]) -> DeMarcbenderLitertlm.ConversationConfiguration
+  public func toolExecution(_ mode: DeMarcbenderLitertlm.ToolExecutionMode) -> DeMarcbenderLitertlm.ConversationConfiguration
+  public func maxImageDimension(_ dimension: Swift.Int) -> DeMarcbenderLitertlm.ConversationConfiguration
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func systemPrompt(_ prompt: Swift.String?) -> DeMarcbenderLitertlm.ConversationConfiguration
+  #endif
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMSessionConfiguration) public class LiteRTLMSessionConfiguration : TitaniumKit.TiProxy {
+  @objc public var maxOutputTokens: Swift.Int32 {
+    @objc get
+    @objc set
+  }
+  @objc public var samplerType: Swift.String {
+    @objc get
+    @objc set
+  }
+  public var sampler: DeMarcbenderLitertlm.LiteRTLMSamplerConfiguration?
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public func toNative() -> DeMarcbenderLitertlm.SessionConfiguration
+  @objc override dynamic public init()
+  @objc deinit
+}
+final public class ModelDownloader : @unchecked Swift.Sendable {
+  final public var state: DeMarcbenderLitertlm.DownloadState {
+    get
+  }
+  final public var progress: Swift.Double {
+    get
+  }
+  final public var downloadedBytes: Swift.Int64 {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public var totalBytes: Swift.Int64? {
+    get
+  }
+  #endif
+  final public let modelsDirectory: Foundation.URL
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(modelsDirectory: Foundation.URL? = nil)
+  #endif
+  final public func isDownloaded(_ model: DeMarcbenderLitertlm.ModelInfo) -> Swift.Bool
+  final public func isDownloaded(fileName: Swift.String) -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func modelPath(for model: DeMarcbenderLitertlm.ModelInfo) -> Foundation.URL?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func modelPath(fileName: Swift.String) -> Foundation.URL?
+  #endif
+  final public func download(model: DeMarcbenderLitertlm.ModelInfo) async
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func download(from url: Foundation.URL, fileName: Swift.String? = nil, expectedSize: Swift.Int64? = nil) async
+  #endif
+  final public func pause()
+  final public func cancel()
+  final public func deleteModel(_ model: DeMarcbenderLitertlm.ModelInfo) throws
+  final public func deleteModel(fileName: Swift.String) throws
+  @objc deinit
+}
+extension DeMarcbenderLitertlm.ModelDownloader : nonisolated Observation.Observable {
+}
+public enum EngineStatus : Swift.Sendable {
+  case notLoaded
+  case loading
+  case ready
+  case error(DeMarcbenderLitertlm.LiteRTLMError)
+}
+public actor LMEngine {
+  public var status: DeMarcbenderLitertlm.EngineStatus {
+    get
+  }
+  public var isReady: Swift.Bool {
+    get
+  }
+  final public let configuration: DeMarcbenderLitertlm.EngineConfiguration
+  public init(configuration: DeMarcbenderLitertlm.EngineConfiguration)
+  @objc deinit
+  public func load() async throws
+  public func unload()
+  @available(iOS 13.0, tvOS 13.0, watchOS 6.0, macOS 10.15, *)
+  @_semantics("defaultActor") nonisolated final public var unownedExecutor: _Concurrency.UnownedSerialExecutor {
+    get
+  }
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMToolParameter) public class LiteRTLMToolParameter : TitaniumKit.TiProxy {
+  @objc public var name: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var type: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc override dynamic public var description: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var required: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public func toNative() -> DeMarcbenderLitertlm.Tool.Parameter
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMContent) public class LiteRTLMContent : TitaniumKit.TiProxy {
+  @objc public var type: Swift.String {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var text: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var imageData: Foundation.Data? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var audioData: Foundation.Data? {
+    @objc get
+    @objc set
+  }
+  #endif
+  @objc public var audioFormat: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var maxDimension: Swift.Int {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public static func text(_ value: Swift.String) -> DeMarcbenderLitertlm.LiteRTLMContent
+  public static func image(_ data: Foundation.Data) -> DeMarcbenderLitertlm.LiteRTLMContent
+  public static func audio(_ data: Foundation.Data, format: Swift.String) -> DeMarcbenderLitertlm.LiteRTLMContent
+  public func toNative() -> DeMarcbenderLitertlm.Content
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMEngineConfiguration) public class LiteRTLMEngineConfiguration : TitaniumKit.TiProxy {
+  @objc public var modelPath: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var primaryBackend: Swift.String {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var visionBackend: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var audioBackend: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var maxTokens: Swift.Int32? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var cacheDir: Swift.String? {
+    @objc get
+    @objc set
+  }
+  #endif
+  @objc public var isBenchmarkEnabled: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc public var logLevel: Swift.String {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public func toNative() throws -> DeMarcbenderLitertlm.EngineConfiguration
+  @objc override dynamic public init()
+  @objc deinit
+}
+public struct BenchmarkInfo : Swift.Sendable {
+  public let initTime: Swift.Double
+  public let timeToFirstToken: Swift.Double
+  public let prefillTurns: [DeMarcbenderLitertlm.BenchmarkInfo.TurnMetric]
+  public let decodeTurns: [DeMarcbenderLitertlm.BenchmarkInfo.TurnMetric]
+  public struct TurnMetric : Swift.Sendable {
+    public let tokensPerSecond: Swift.Double
+    public let tokenCount: Swift.Int
+  }
+  public var averageDecodeSpeed: Swift.Double {
+    get
+  }
+  public var averagePrefillSpeed: Swift.Double {
+    get
+  }
+  public var totalTokensGenerated: Swift.Int {
+    get
+  }
+}
+public enum Backend : Swift.String, Swift.Sendable {
+  case cpu
+  case gpu
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.String)
+  #endif
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum LogLevel : Swift.Int, Swift.Sendable {
+  case info
+  case warning
+  case error
+  case fatal
+  case silent
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public struct EngineConfiguration : Swift.Sendable {
+  public let modelPath: Foundation.URL
+  public var primaryBackend: DeMarcbenderLitertlm.Backend {
+    get
+  }
+  public var visionBackend: DeMarcbenderLitertlm.Backend? {
+    get
+  }
+  public var audioBackend: DeMarcbenderLitertlm.Backend? {
+    get
+  }
+  public var maxTokens: Swift.Int? {
+    get
+  }
+  public var cacheDir: Foundation.URL? {
+    get
+  }
+  public var isBenchmarkEnabled: Swift.Bool {
+    get
+  }
+  public var logLevel: DeMarcbenderLitertlm.LogLevel {
+    get
+  }
+  public init(modelPath: Foundation.URL)
+  public func backend(_ backend: DeMarcbenderLitertlm.Backend) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func visionBackend(_ backend: DeMarcbenderLitertlm.Backend) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func audioBackend(_ backend: DeMarcbenderLitertlm.Backend) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func maxTokens(_ count: Swift.Int) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func cacheDirectory(_ url: Foundation.URL) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func benchmarkEnabled(_ enabled: Swift.Bool) -> DeMarcbenderLitertlm.EngineConfiguration
+  public func logLevel(_ level: DeMarcbenderLitertlm.LogLevel) -> DeMarcbenderLitertlm.EngineConfiguration
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMTool) public class LiteRTLMTool : TitaniumKit.TiProxy {
+  @objc public var name: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc override dynamic public var description: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var parameters: [Any] {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var executeCallback: TitaniumKit.KrollCallback? {
+    @objc get
+    @objc set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public func toNative() -> DeMarcbenderLitertlm.Tool
+  @objc override dynamic public init()
+  @objc deinit
+}
+public enum DownloadState : Swift.Sendable, Swift.Equatable {
+  case idle
+  case downloading
+  case paused
+  case completed
+  case failed(Swift.String)
+  public static func == (a: DeMarcbenderLitertlm.DownloadState, b: DeMarcbenderLitertlm.DownloadState) -> Swift.Bool
+}
+@_inheritsConvenienceInitializers @objc(LiteRTLMModelInfo) public class LiteRTLMModelInfo : TitaniumKit.TiProxy {
+  @objc public var name: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var displayName: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc public var url: Swift.String {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var expectedSize: Swift.Int64? {
+    get
+    set
+  }
+  #endif
+  @objc public var fileName: Swift.String {
+    @objc get
+    @objc set
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc override dynamic public func _init(withPageContext context: (any TitaniumKit.TiEvaluator)!) -> Self?
+  #endif
+  public static func gemma4E2B() -> DeMarcbenderLitertlm.LiteRTLMModelInfo
+  public static func gemma4E4B() -> DeMarcbenderLitertlm.LiteRTLMModelInfo
+  public func toNative() -> DeMarcbenderLitertlm.ModelInfo
+  @objc override dynamic public init()
+  @objc deinit
+}
+public struct Tool : Swift.Sendable {
+  public let name: Swift.String
+  public let description: Swift.String
+  public let parameters: [DeMarcbenderLitertlm.Tool.Parameter]
+  public let execute: @Sendable ([Swift.String : Any]) async throws -> [Swift.String : Any]
+  public init(name: Swift.String, description: Swift.String, parameters: [DeMarcbenderLitertlm.Tool.Parameter] = [], execute: @escaping @Sendable ([Swift.String : Any]) async throws -> [Swift.String : Any])
+  public struct Parameter : Swift.Sendable {
+    public let name: Swift.String
+    public let type: DeMarcbenderLitertlm.Tool.ParameterType
+    public let description: Swift.String
+    public let required: Swift.Bool
+    public init(name: Swift.String, type: DeMarcbenderLitertlm.Tool.ParameterType = .string, description: Swift.String = "", required: Swift.Bool = false)
+  }
+  public enum ParameterType : Swift.String, Swift.Sendable {
+    case string
+    case number
+    case integer
+    case boolean
+    case array
+    case object
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.String)
+    #endif
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+}
+public struct ToolResult : @unchecked Swift.Sendable {
+  public let toolName: Swift.String
+  public let result: [Swift.String : Any]
+  public init(toolName: Swift.String, result: [Swift.String : Any])
+}
+extension DeMarcbenderLitertlm.PromptTemplate : Swift.Equatable {}
+extension DeMarcbenderLitertlm.PromptTemplate : Swift.Hashable {}
+extension DeMarcbenderLitertlm.AudioFormat : Swift.Equatable {}
+extension DeMarcbenderLitertlm.AudioFormat : Swift.Hashable {}
+extension DeMarcbenderLitertlm.AudioFormat : Swift.RawRepresentable {}
+extension DeMarcbenderLitertlm.Role : Swift.Equatable {}
+extension DeMarcbenderLitertlm.Role : Swift.Hashable {}
+extension DeMarcbenderLitertlm.Role : Swift.RawRepresentable {}
+extension DeMarcbenderLitertlm.SamplerConfiguration.SamplerType : Swift.Equatable {}
+extension DeMarcbenderLitertlm.SamplerConfiguration.SamplerType : Swift.Hashable {}
+extension DeMarcbenderLitertlm.ToolExecutionMode : Swift.Equatable {}
+extension DeMarcbenderLitertlm.ToolExecutionMode : Swift.Hashable {}
+extension DeMarcbenderLitertlm.Backend : Swift.Equatable {}
+extension DeMarcbenderLitertlm.Backend : Swift.Hashable {}
+extension DeMarcbenderLitertlm.Backend : Swift.RawRepresentable {}
+extension DeMarcbenderLitertlm.LogLevel : Swift.Equatable {}
+extension DeMarcbenderLitertlm.LogLevel : Swift.Hashable {}
+extension DeMarcbenderLitertlm.LogLevel : Swift.RawRepresentable {}
+extension DeMarcbenderLitertlm.Tool.ParameterType : Swift.Equatable {}
+extension DeMarcbenderLitertlm.Tool.ParameterType : Swift.Hashable {}
+extension DeMarcbenderLitertlm.Tool.ParameterType : Swift.RawRepresentable {}
