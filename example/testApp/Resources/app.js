@@ -71,7 +71,7 @@ var headerView = Ti.UI.createView({
     layout: 'horizontal',
     height: 44,
     backgroundColor: '#16213e',
-    top: 0,
+    top: 60,
     left: 0,
     right: 0
 });
@@ -120,6 +120,8 @@ headerView.add(resetButton);
 // Chat-Nachrichten-Liste (TableView)
 // ============================================================
 var messages = []; // { role: 'user'|'model'|'system', text: '', image: null }
+var loadModelViewAdded = false;
+var downloadViewAdded = false;
 
 var chatTableView = Ti.UI.createTableView({
     backgroundColor: '#0f3460',
@@ -501,7 +503,7 @@ function loadModel() {
     if (isModelLoading || hasLoadedModel) return;
 
     isModelLoading = true;
-    loadModelButton.setTitle('Laden...');
+    loadModelButton.title = 'Laden...';
     loadModelButton.enabled = false;
     statusLabel.text = 'Modell wird geladen...';
 
@@ -550,7 +552,7 @@ function loadModel() {
     downloader.addEventListener('downloaderror', function(e) {
         statusLabel.text = 'Download-Fehler: ' + e.message;
         isModelLoading = false;
-        loadModelButton.setTitle('Modell laden');
+        loadModelButton.title = 'Modell laden';
         loadModelButton.enabled = true;
     });
 
@@ -627,7 +629,7 @@ litertlm.addEventListener('conversationcreated', function(e) {
     conversation = e.conversation;
     hasLoadedModel = true;
     isModelLoading = false;
-    loadModelButton.setTitle('Modell laden');
+    loadModelButton.title = 'Modell laden';
     loadModelButton.enabled = true;
     statusLabel.text = 'Bereit zum Chat. Sende eine Nachricht!';
 
@@ -765,15 +767,17 @@ function cleanup() {
     clearMessages();
     updateInputButtons();
     statusLabel.text = 'Zurückgesetzt. Tippe "Modell laden".';
-    loadModelButton.setTitle('Modell laden');
+    loadModelButton.title = 'Modell laden';
     loadModelButton.enabled = true;
 
     // Modell-Ladebereich wieder anzeigen
-    if (mainWin.getViews().indexOf(loadModelView) === -1) {
+    if (!loadModelViewAdded) {
         mainWin.add(loadModelView);
+        loadModelViewAdded = true;
     }
-    if (mainWin.getViews().indexOf(downloadView) === -1) {
+    if (!downloadViewAdded) {
         mainWin.add(downloadView);
+        downloadViewAdded = true;
     }
 }
 
@@ -1171,7 +1175,9 @@ function stripGemmaTags(text) {
 mainWin.add(headerView);
 mainWin.add(chatTableView);
 mainWin.add(downloadView);
+        downloadViewAdded = true;
 mainWin.add(loadModelView);
+        loadModelViewAdded = true;
 mainWin.add(inputBar);
 
 // Initiale Message-Liste rendern
