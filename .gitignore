@@ -1,0 +1,23 @@
+# Build artifacts
+ios/build/
+ios/dist/
+ios/platform/
+
+# Test app build artifacts
+example/testApp/build/
+example/testApp/platform/
+example/testApp/modules/
+
+# Xcode
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Node modules (if applicable)
+node_modules/
+
