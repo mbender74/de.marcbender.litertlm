@@ -28,6 +28,12 @@ import TitaniumKit
 @objc(DeMarcbenderLitertlmModule)
 class DeMarcbenderLitertlmModule: TiModule {
 
+  // MARK: - Properties
+
+  /// Strong reference to keep Swift objects alive while proxies are used from JS
+  private var _downloader: LiteRTLMModelDownloaderProxy?
+  private var _engine: LMEngine?
+
   func moduleGUID() -> String {
     return "208537d4-6bc7-4c6c-abcc-71efc42ca465"
   }
@@ -292,6 +298,7 @@ class DeMarcbenderLitertlmModule: TiModule {
     }
 
     let proxy = LiteRTLMModelDownloaderProxy(modelsDirectory: dir)
+    _downloader = proxy  // Keep Swift object alive
     replaceValue(proxy, forKey: "downloader", notification: false)
     debugPrint("[DEBUG] ModelDownloader created with directory: \(dir ?? "default")")
     return proxy
