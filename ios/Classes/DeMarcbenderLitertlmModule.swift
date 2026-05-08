@@ -33,6 +33,7 @@ class DeMarcbenderLitertlmModule: TiModule {
   /// Strong reference to keep Swift objects alive while proxies are used from JS
   private var _downloader: LiteRTLMModelDownloaderProxy?
   private var _engine: LMEngine?
+  private var _exampleProxy: DeMarcbenderLitertlmExampleProxy?
 
   func moduleGUID() -> String {
     return "208537d4-6bc7-4c6c-abcc-71efc42ca465"
@@ -47,6 +48,8 @@ class DeMarcbenderLitertlmModule: TiModule {
   override func startup() {
     super.startup()
     debugPrint("[DEBUG] TitaniumLiteRTLM module loaded")
+    // Keep ExampleProxy alive to prevent swift_retain crash
+    _exampleProxy = DeMarcbenderLitertlmExampleProxy()
   }
 
   // MARK: - Engine
