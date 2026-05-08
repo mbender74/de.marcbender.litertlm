@@ -283,7 +283,7 @@ class DeMarcbenderLitertlmModule: TiModule {
   // MARK: - Model Downloader
 
   @objc(createDownloader:)
-  func createDownloader(arguments: [Any]?) {
+  func createDownloader(arguments: [Any]?) -> Any? {
     let dir: String?
     if let args = arguments, let dict = args.first as? [String: Any] {
       dir = dict["modelsDirectory"] as? String
@@ -294,6 +294,7 @@ class DeMarcbenderLitertlmModule: TiModule {
     let proxy = LiteRTLMModelDownloaderProxy(modelsDirectory: dir)
     replaceValue(proxy, forKey: "downloader", notification: false)
     debugPrint("[DEBUG] ModelDownloader created with directory: \(dir ?? "default")")
+    return proxy
   }
 
   @objc(createModelInfo:)
