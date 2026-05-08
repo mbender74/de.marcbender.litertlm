@@ -2,105 +2,94 @@
 //  LiteRTLMModelDownloaderProxy.swift
 //  TitaniumLiteRTLM
 //
-//  Created by Marc Bender
-//  Copyright (c) 2026 by Your Company. All rights reserved.
+//  No CLiteRTLM import here – delegates to module to avoid Swift metadata crash
 //
-import CLiteRTLM
+
 import UIKit
 import TitaniumKit
-
-
 
 @objc(LiteRTLMModelDownloaderProxy)
 public class LiteRTLMModelDownloaderProxy: TiProxy {
 
-  internal var _downloader: ModelDownloader?
-  internal var _modelsDirectory: String?
-
   @objc public var modelsDirectory: String? {
-      get { return _modelsDirectory }
-      set { _modelsDirectory = newValue; replaceValue(newValue, forKey: "modelsDirectory", notification: false) }
-  }
-
-  @objc
-  public override func _init(withPageContext context: TiEvaluator!) -> Self? {
-    super._init(withPageContext: context)
-    return self
-  }
-
-  @objc
-  public convenience init?(modelsDirectory: String?) {
-    self.init()
-    _modelsDirectory = modelsDirectory
-  }
-
-  // MARK: - Public API
-
-  @objc
-  public func download(_ modelInfo: LiteRTLMModelInfo) {
-    Task {
-      await downloader().download(model: modelInfo.toNative())
+    get { return _modelsDirectory as? String }
+    set {
+      _modelsDirectory = newValue as NSString?
+      replaceValue(newValue, forKey: "modelsDirectory", notification: false)
     }
   }
 
-  public func downloadFrom(_ url: String, fileName: String?, expectedSize: Int64?) {
-    guard let url = URL(string: url) else {
-      fireEvent("error", with: ["message": "Invalid URL"])
-      return
+  private var _modelsDirectory: NSString?
+
+  override init() {
+    super.init()
+  }
+
+  override public func _init(withProperties properties: [AnyHashable : Any]!) {
+    super._init(withProperties: properties)
+    if let dir = properties["modelsDirectory"] as? String {
+      _modelsDirectory = dir as NSString
     }
-    Task {
-      await downloader().download(from: url, fileName: fileName, expectedSize: expectedSize)
-    }
+  }
+
+  // MARK: - Public API (delegates to module for CLiteRTLM work)
+
+  @objc
+  public func download(_ modelInfo: Any?) {
+    guard let module = module() else { return }
+    module.delegateDownload(with: modelInfo, proxy: self)
+  }
+
+  @objc
+  public func downloadFrom(_ url: String, fileName: String?, expectedSize: NSNumber?) {
+    guard let module = module() else { return }
+    module.delegateDownloadFrom(url: url, fileName: fileName, expectedSize: expectedSize, proxy: self)
   }
 
   @objc
   public func pause() {
-    Task {
-      await downloader().pause()
-    }
+    guard let module = module() else { return }
+    module.delegatePauseDownload(proxy: self)
   }
 
   @objc
   public func cancel() {
-    Task {
-      await downloader().cancel()
-    }
+    guard let module = module() else { return }
+    module.delegateCancelDownload(proxy: self)
   }
 
   @objc
-  public func isDownloaded(_ modelInfo: LiteRTLMModelInfo) -> Bool {
-    return downloader().isDownloaded(modelInfo.toNative())
+  public func isDownloaded(_ modelInfo: Any?) -> Bool {
+    guard let module = module() else { return false }
+    return module.delegateIsDownloaded(with: modelInfo, proxy: self)
   }
 
   @objc
-  public func modelPath(_ modelInfo: LiteRTLMModelInfo) -> String? {
-    return downloader().modelPath(for: modelInfo.toNative())?.path
+  public func modelPath(_ modelInfo: Any?) -> String? {
+    guard let module = module() else { return nil }
+    return module.delegateModelPath(for: modelInfo, proxy: self)
   }
 
   @objc
-  public func deleteModel(_ modelInfo: LiteRTLMModelInfo) {
-    try? downloader().deleteModel(modelInfo.toNative())
+  public func deleteModel(_ modelInfo: Any?) {
+    guard let module = module() else { return }
+    module.delegateDeleteModel(with: modelInfo, proxy: self)
   }
 
   @objc
   public func deleteModelByFileName(_ fileName: String) {
-    try? downloader().deleteModel(fileName: fileName)
+    guard let module = module() else { return }
+    module.delegateDeleteModel(fileName: fileName, proxy: self)
   }
 
   @objc
   public func getModelsDirectory() -> String? {
-    return downloader().modelsDirectory.path
+    return _modelsDirectory as String?
   }
 
-  // MARK: - Internal
+  // MARK: - Helper
 
-  private func downloader() -> ModelDownloader {
-    if let dl = _downloader {
-      return dl
-    }
-    let dir = _modelsDirectory != nil ? URL(fileURLWithPath: _modelsDirectory!) : nil
-    let newDl = ModelDownloader(modelsDirectory: dir)
-    _downloader = newDl
-    return newDl
+  private func module() -> DeMarcbenderLitertlmModule? {
+    return DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule
   }
 }
