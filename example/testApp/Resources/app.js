@@ -639,6 +639,8 @@ litertlm.addEventListener('conversationcreated', function(e) {
     // Modell-Ladebereich ausblenden
     mainWin.remove(loadModelView);
     mainWin.remove(downloadView);
+    loadModelViewAdded = false;
+    downloadViewAdded = false;
 });
 
 /**
