@@ -68,8 +68,9 @@ public class LiteRTLMEngineConfiguration: TiProxy {
     return self
   }
 
-  public func toNative() throws -> EngineConfiguration {
-    var config = EngineConfiguration(modelPath: URL(fileURLWithPath: _modelPath))
+  public func toNative(resolvedModelPath: String? = nil) throws -> EngineConfiguration {
+    let path = resolvedModelPath ?? _modelPath
+    var config = EngineConfiguration(modelPath: URL(fileURLWithPath: path))
 
     switch _primaryBackend {
     case "gpu": config = config.backend(.gpu)

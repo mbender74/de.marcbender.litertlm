@@ -55,13 +55,22 @@ public actor LMEngine {
 
         status = .loading
 
-        litert_lm_set_min_log_level(Int32(config.logLevel.rawValue))
+        // Set log level to INFO to get maximum debugging output from CLiteRTLM
+        litert_lm_set_min_log_level(0)
+
+        // Convert Swift strings to null-terminated C strings
+        let cModelPath = (modelPath as NSString).utf8String!
+        let cBackend = (config.primaryBackend.rawValue as NSString).utf8String!
+        let visionBackendStr = config.visionBackend?.rawValue ?? "cpu"
+        let audioBackendStr = config.audioBackend?.rawValue ?? "cpu"
+        let cVisionBackend = (visionBackendStr as NSString).utf8String!
+        let cAudioBackend = (audioBackendStr as NSString).utf8String!
 
         guard let settings = litert_lm_engine_settings_create(
-            modelPath,
-            config.primaryBackend.rawValue,
-            config.visionBackend?.rawValue,
-            config.audioBackend?.rawValue
+            cModelPath,
+            cBackend,
+            cVisionBackend,
+            cAudioBackend
         ) else {
             let err = LiteRTLMError.engineCreationFailed(reason: "Failed to create engine settings")
             status = .error(err)
@@ -74,7 +83,7 @@ public actor LMEngine {
         }
 
         if let cacheDir = config.cacheDir {
-            litert_lm_engine_settings_set_cache_dir(settings, cacheDir.path)
+            litert_lm_engine_settings_set_cache_dir(settings, (cacheDir.path as NSString).utf8String!)
         }
 
         if config.isBenchmarkEnabled {

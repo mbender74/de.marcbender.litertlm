@@ -58,15 +58,31 @@ public final class ModelDownloader: @unchecked Sendable {
     public init(modelsDirectory: URL? = nil) {
         if let dir = modelsDirectory {
             self.modelsDirectory = dir
+            NSLog("[DEBUG] ModelDownloader.init: custom directory = \(dir.path)")
         } else {
             let appSupport = FileManager.default.urls(
                 for: .applicationSupportDirectory, in: .userDomainMask).first!
             self.modelsDirectory = appSupport.appendingPathComponent(
                 "LiteRTLM/Models", isDirectory: true)
+            NSLog("[DEBUG] ModelDownloader.init: default directory = \(self.modelsDirectory.path)")
         }
 
-        try? FileManager.default.createDirectory(
-            at: self.modelsDirectory, withIntermediateDirectories: true)
+        try? ensureModelsDirectory()
+    }
+
+    /// Ensure the models directory exists on disk. Throws if creation fails.
+    private func ensureModelsDirectory() throws {
+        NSLog("[DEBUG] ModelDownloader.ensureModelsDirectory: path = \(modelsDirectory.path)")
+        do {
+            try FileManager.default.createDirectory(
+                at: modelsDirectory, withIntermediateDirectories: true)
+            NSLog("[DEBUG] ModelDownloader.ensureModelsDirectory: directory ready")
+            logger.info("Models directory ready: \(self.modelsDirectory.path)")
+        } catch {
+            NSLog("[DEBUG] ModelDownloader.ensureModelsDirectory: FAILED - \(error.localizedDescription)")
+            logger.error("Failed to create models directory: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     // MARK: - Query
@@ -116,9 +132,15 @@ public final class ModelDownloader: @unchecked Sendable {
         expectedSize: Int64? = nil
     ) async {
         let targetName = fileName ?? url.lastPathComponent
+        NSLog("[DEBUG] ModelDownloader.download: url = \(url.absoluteString)")
+        NSLog("[DEBUG] ModelDownloader.download: fileName param = \(fileName ?? "nil")")
+        NSLog("[DEBUG] ModelDownloader.download: targetName = \(targetName)")
+        NSLog("[DEBUG] ModelDownloader.download: modelsDirectory = \(modelsDirectory.path)")
+        NSLog("[DEBUG] ModelDownloader.download: expectedSize = \(expectedSize?.description ?? "nil")")
 
         // Check if already downloaded
         if isDownloaded(fileName: targetName) {
+            NSLog("[DEBUG] ModelDownloader.download: file already exists, skipping")
             state = .completed
             progress = 1.0
             return
@@ -126,6 +148,7 @@ public final class ModelDownloader: @unchecked Sendable {
 
         totalBytes = expectedSize
         state = .downloading
+        NSLog("[DEBUG] ModelDownloader.download: starting download task")
 
         let delegate = DownloadDelegate { [weak self] bytesWritten, totalWritten, expectedTotal in
             guard let self else { return }
@@ -163,17 +186,29 @@ public final class ModelDownloader: @unchecked Sendable {
                 switch result {
                 case .success(let tempURL):
                     let dest = modelsDirectory.appendingPathComponent(targetName)
+                    NSLog("[DEBUG] ModelDownloader: download complete, tempURL = \(tempURL.path)")
+                    NSLog("[DEBUG] ModelDownloader: destination = \(dest.path)")
+                    NSLog("[DEBUG] ModelDownloader: targetName = \(targetName)")
                     do {
+                        // Ensure destination directory exists
+                        try ensureModelsDirectory()
+                        NSLog("[DEBUG] ModelDownloader: destination directory exists = \(FileManager.default.fileExists(atPath: dest.deletingLastPathComponent().path))")
+
                         if FileManager.default.fileExists(atPath: dest.path) {
+                            NSLog("[DEBUG] ModelDownloader: removing existing file at \(dest.path)")
                             try FileManager.default.removeItem(at: dest)
                         }
+                        NSLog("[DEBUG] ModelDownloader: attempting moveItem from \(tempURL.path) to \(dest.path)")
                         try FileManager.default.moveItem(at: tempURL, to: dest)
                         state = .completed
                         progress = 1.0
                         logger.info("Model downloaded to \(dest.path)")
+                        NSLog("[DEBUG] ModelDownloader: move SUCCESS")
                     } catch {
-                        state = .failed("Failed to move file: \(error.localizedDescription)")
-                        logger.error("Move failed: \(error.localizedDescription)")
+                        let errorMsg = "Failed to move file: \(error.localizedDescription) (from \(tempURL.path) to \(dest.path))"
+                        state = .failed(errorMsg)
+                        logger.error("Move failed: \(errorMsg)")
+                        NSLog("[DEBUG] ModelDownloader: move FAILED - \(errorMsg)")
                     }
                 case .failure(let error):
                     if (error as NSError).code == NSURLErrorCancelled {
@@ -237,9 +272,19 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, Send
 
     let onProgress: @Sendable (Int64, Int64, Int64) -> Void
     nonisolated(unsafe) var completion: ((Result<URL, Error>) -> Void)?
+    private let completionLock = NSLock()
 
     init(onProgress: @escaping @Sendable (Int64, Int64, Int64) -> Void) {
         self.onProgress = onProgress
+    }
+
+    /// Call completion at most once, preventing race between didFinish and didCompleteWithError
+    private func complete(with result: Result<URL, Error>) {
+        completionLock.lock()
+        defer { completionLock.unlock() }
+        guard let completion = completion else { return }
+        self.completion = nil
+        completion(result)
     }
 
     func urlSession(
@@ -247,15 +292,10 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, Send
         downloadTask: URLSessionDownloadTask,
         didFinishDownloadingTo location: URL
     ) {
-        // Copy to a temp location that won't be cleaned up
-        let tmp = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString + ".litertlm")
-        do {
-            try FileManager.default.copyItem(at: location, to: tmp)
-            completion?(.success(tmp))
-        } catch {
-            completion?(.failure(error))
-        }
+        // Pass the system temp URL directly – download() moves it synchronously
+        // This avoids an unnecessary 2GB+ intermediate copy
+        NSLog("[DEBUG] DownloadDelegate: didFinishDownloadingTo = \(location.path)")
+        complete(with: .success(location))
     }
 
     func urlSession(
@@ -274,7 +314,7 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, Send
         didCompleteWithError error: Error?
     ) {
         if let error {
-            completion?(.failure(error))
+            complete(with: .failure(error))
         }
     }
 }

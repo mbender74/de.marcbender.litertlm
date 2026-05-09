@@ -155,6 +155,39 @@ public class LiteRTLMEngineProxy: TiProxy {
     }
   }
 
+  @objc
+  public func createConversationWithConfig(_ configuration: LiteRTLMConversationConfiguration) {
+    NSLog("[DEBUG] LiteRTLMEngineProxy: createConversationWithConfig called")
+    Task {
+      do {
+        guard let engine = _engine, await engine.isReady else {
+          await MainActor.run {
+            _status = "error"
+            _lastError = "Engine is not ready or not initialized"
+            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
+          }
+          return
+        }
+        let convConfig: ConversationConfiguration = configuration.toNative()
+        let conversation = try await engine.createConversation(configuration: convConfig)
+        let proxy = LiteRTLMConversationProxy()
+        proxy._conversation = conversation
+        proxy._engineProxy = self
+        proxy._configuration = configuration
+        replaceValue(proxy, forKey: "conversation", notification: false)
+        fireEvent("conversationcreated", with: ["conversation": proxy])
+        NSLog("[DEBUG] LiteRTLMEngineProxy: conversationcreated event fired")
+      } catch {
+        await MainActor.run {
+          _status = "error"
+          _lastError = error.localizedDescription
+          fireEvent("error", with: ["message": error.localizedDescription])
+        }
+        NSLog("[DEBUG] LiteRTLMEngineProxy: createConversationWithConfig error - \(error.localizedDescription)")
+      }
+    }
+  }
+
   // MARK: - Internal
 
   func setEngine(_ engine: LMEngine) {

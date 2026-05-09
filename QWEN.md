@@ -29,7 +29,9 @@ cd /Users/marcbender/TitaniumLiteRTLM/ios && ti build -p ios --build-only
 cd /Users/marcbender/example/testApp && rm -rf modules/iphone/de.marcbender.litertlm && \
   unzip -o /Users/marcbender/TitaniumLiteRTLM/ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip -d modules/iphone/
 
-# testApp kompilieren (manuell in Xcode)
+# testApp kompilieren (Simulator)
+ti build --project-dir "/Users/marcbender/example/testApp" --log-level trace --platform ios --color \
+  --no-prompt --target simulator --device-id EF7ADE41-4058-4E56-8344-F6164B60D53B --sdk "13.2.0.GA"
 ```
 
 ## Debugging

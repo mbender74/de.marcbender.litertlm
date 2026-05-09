@@ -114,22 +114,69 @@ class DeMarcbenderLitertlmModule: TiModule {
   @objc(createEngineWithConfig:)
   func createEngineWithConfig(arguments: [Any]?) {
     NSLog("[DEBUG] createEngineWithConfig() CALLED")
-    guard let args = arguments, let configArg = args.first as? LiteRTLMEngineConfiguration else {
-      throwException("Invalid arguments", subreason: "Expected a LiteRTLMEngineConfiguration object", location: #function)
+    NSLog("[DEBUG] createEngineWithConfig: arguments = \(arguments as Any)")
+    guard let args = arguments else {
+      NSLog("[DEBUG] createEngineWithConfig: ERROR - arguments is nil")
+      throwException("Invalid arguments", subreason: "arguments is nil", location: #function)
       return
+    }
+    NSLog("[DEBUG] createEngineWithConfig: args.count = \(args.count)")
+    guard let firstArg = args.first else {
+      NSLog("[DEBUG] createEngineWithConfig: ERROR - args is empty")
+      throwException("Invalid arguments", subreason: "args array is empty", location: #function)
+      return
+    }
+    NSLog("[DEBUG] createEngineWithConfig: firstArg type = \(type(of: firstArg))")
+    guard let configArg = firstArg as? LiteRTLMEngineConfiguration else {
+      NSLog("[DEBUG] createEngineWithConfig: ERROR - cannot cast firstArg to LiteRTLMEngineConfiguration")
+      throwException("Invalid arguments", subreason: "Expected a LiteRTLMEngineConfiguration object, got \(type(of: firstArg))", location: #function)
+      return
+    }
+    NSLog("[DEBUG] createEngineWithConfig: configArg received, modelPath = \(configArg._modelPath)")
+
+    // Resolve relative model paths against the downloader's modelsDirectory
+    var resolvedModelPath = configArg._modelPath
+    if !configArg._modelPath.hasPrefix("/") {
+      // Relative path – resolve against modelsDirectory
+      let dl = self.downloader()
+      let fullPath = dl.modelsDirectory.appendingPathComponent(configArg._modelPath).path
+      NSLog("[DEBUG] createEngineWithConfig: resolved relative modelPath to \(fullPath)")
+      resolvedModelPath = fullPath
     }
 
     do {
-      let config = try configArg.toNative()
+      let config = try configArg.toNative(resolvedModelPath: resolvedModelPath)
       let engine = LMEngine(configuration: config)
       let proxy = LiteRTLMEngineProxy()
-      proxy._status = "notLoaded"
+      proxy._status = "loading"
       proxy.setEngine(engine)
       replaceValue(proxy, forKey: "engine", notification: false)
 
-      NSLog("[DEBUG] About to fire enginecreated event (config)")
-      fireEvent("enginecreated", with: ["engine": proxy])
-      NSLog("[DEBUG] enginecreated event fired (config)")
+      // Auto-load the engine before firing enginecreated event
+      NSLog("[DEBUG] createEngineWithConfig: loading engine...")
+      Task {
+        do {
+          try await engine.load()
+          proxy._status = "ready"
+          proxy._isReady = true
+          NSLog("[DEBUG] createEngineWithConfig: engine loaded successfully")
+
+          // Fire event on main thread
+          await MainActor.run {
+            NSLog("[DEBUG] About to fire enginecreated event (config)")
+            fireEvent("enginecreated", with: ["engine": proxy])
+            NSLog("[DEBUG] enginecreated event fired (config)")
+          }
+        } catch {
+          proxy._status = "error"
+          proxy._lastError = error.localizedDescription
+          NSLog("[DEBUG] createEngineWithConfig: engine load FAILED - \(error.localizedDescription)")
+
+          await MainActor.run {
+            fireEvent("engineerror", with: ["message": error.localizedDescription])
+          }
+        }
+      }
     } catch {
       throwException("Engine creation failed", subreason: error.localizedDescription, location: #function)
     }
@@ -138,25 +185,27 @@ class DeMarcbenderLitertlmModule: TiModule {
   // MARK: - Create Proxies
 
   @objc(createSessionProxy:)
-  func createSessionProxy(arguments: [Any]?) {
+  func createSessionProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createSessionProxy() CALLED")
     let proxy = LiteRTLMSessionProxy()
     proxy._isActive = false
     replaceValue(proxy, forKey: "session", notification: false)
+    return proxy
   }
 
   @objc(createConversationProxy:)
-  func createConversationProxy(arguments: [Any]?) {
+  func createConversationProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createConversationProxy() CALLED")
     let proxy = LiteRTLMConversationProxy()
     proxy._isActive = false
     replaceValue(proxy, forKey: "conversation", notification: false)
+    return proxy
   }
 
   @objc(createEngineConfigProxy:)
-  func createEngineConfigProxy(arguments: [Any]?) {
+  func createEngineConfigProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createEngineConfigProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMEngineConfiguration()
     if let modelPath = params["modelPath"] as? String {
       proxy._modelPath = modelPath
@@ -183,12 +232,14 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._audioBackend = audioBackend
     }
     replaceValue(proxy, forKey: "engineConfig", notification: false)
+    NSLog("[DEBUG] createEngineConfigProxy: returning proxy")
+    return proxy
   }
 
   @objc(createSessionConfigProxy:)
-  func createSessionConfigProxy(arguments: [Any]?) {
+  func createSessionConfigProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createSessionConfigProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMSessionConfiguration()
     if let maxTokens = params["maxOutputTokens"] as? Int32 {
       proxy._maxOutputTokens = maxTokens
@@ -197,12 +248,13 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._samplerType = samplerType
     }
     replaceValue(proxy, forKey: "sessionConfig", notification: false)
+    return proxy
   }
 
   @objc(createConversationConfigProxy:)
-  func createConversationConfigProxy(arguments: [Any]?) {
+  func createConversationConfigProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createConversationConfigProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMConversationConfiguration()
     if let maxTokens = params["maxOutputTokens"] as? Int32 {
       proxy._maxOutputTokens = maxTokens
@@ -220,12 +272,13 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._systemPrompt = systemPrompt
     }
     replaceValue(proxy, forKey: "conversationConfig", notification: false)
+    return proxy
   }
 
   @objc(createSamplerConfigProxy:)
-  func createSamplerConfigProxy(arguments: [Any]?) {
+  func createSamplerConfigProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createSamplerConfigProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMSamplerConfiguration()
     if let temperature = params["temperature"] as? Double {
       proxy._temperature = Float(temperature)
@@ -243,12 +296,13 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._samplerType = type
     }
     replaceValue(proxy, forKey: "samplerConfig", notification: false)
+    return proxy
   }
 
   @objc(createContentProxy:)
-  func createContentProxy(arguments: [Any]?) {
+  func createContentProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createContentProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMContent()
     if let type = params["type"] as? String {
       proxy._type = type
@@ -269,12 +323,13 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._maxDimension = maxDim
     }
     replaceValue(proxy, forKey: "content", notification: false)
+    return proxy
   }
 
   @objc(createMessageProxy:)
-  func createMessageProxy(arguments: [Any]?) {
+  func createMessageProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createMessageProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMMessage()
     if let role = params["role"] as? String {
       proxy._role = role
@@ -283,12 +338,13 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._contents = contents
     }
     replaceValue(proxy, forKey: "message", notification: false)
+    return proxy
   }
 
   @objc(createToolProxy:)
-  func createToolProxy(arguments: [Any]?) {
+  func createToolProxy(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createToolProxy() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMTool()
     if let name = params["name"] as? String {
       proxy._name = name
@@ -300,6 +356,7 @@ class DeMarcbenderLitertlmModule: TiModule {
       proxy._parameters = parameters
     }
     replaceValue(proxy, forKey: "tool", notification: false)
+    return proxy
   }
 
   // MARK: - Model Downloader
@@ -312,21 +369,29 @@ class DeMarcbenderLitertlmModule: TiModule {
       return nil
     }
 
-    let dir: String? = params["modelsDirectory"] as? String
-    NSLog("[DEBUG] createDownloader: modelsDirectory = \(dir ?? "nil")")
+    let rawDir: Any? = params["modelsDirectory"]
+    let dir: String?
+
+    if let raw = rawDir as? String, !raw.isEmpty, raw != "undefined", !raw.hasPrefix("undefined") {
+      dir = raw
+      NSLog("[DEBUG] createDownloader: modelsDirectory from JS = \(dir!)")
+    } else {
+      dir = nil
+      NSLog("[DEBUG] createDownloader: modelsDirectory invalid/undefined, using default")
+    }
 
     let proxy = LiteRTLMModelDownloaderProxy()
     proxy._init(withProperties: ["modelsDirectory": dir as Any])
     _downloader = proxy
     replaceValue(proxy, forKey: "downloader", notification: false)
-    NSLog("[DEBUG] ModelDownloader created with directory: \(dir ?? "default")")
+    NSLog("[DEBUG] ModelDownloader created with directory: \(dir ?? "default (Application Support/LiteRTLM/Models)")")
     return proxy
   }
 
   @objc(createModelInfo:)
-  func createModelInfo(arguments: [Any]?) {
+  func createModelInfo(arguments: [Any]?) -> Any? {
     NSLog("[DEBUG] createModelInfo() CALLED")
-    guard let params = arguments?.first as? [String: Any] else { return }
+    guard let params = arguments?.first as? [String: Any] else { return nil }
     let proxy = LiteRTLMModelInfo()
     if let name = params["name"] as? String { proxy._name = name }
     if let displayName = params["displayName"] as? String { proxy._displayName = displayName }
@@ -334,6 +399,7 @@ class DeMarcbenderLitertlmModule: TiModule {
     if let expectedSize = params["expectedSize"] as? Int64 { proxy._expectedSize = expectedSize }
     if let fileName = params["fileName"] as? String { proxy._fileName = fileName }
     replaceValue(proxy, forKey: "modelInfo", notification: false)
+    return proxy
   }
 
   // MARK: - Utility Methods
@@ -370,27 +436,48 @@ class DeMarcbenderLitertlmModule: TiModule {
     if let dl = _nativeDownloader { return dl }
     let proxy = _downloader as? LiteRTLMModelDownloaderProxy
     let dir = proxy?.modelsDirectory.map { URL(fileURLWithPath: $0) }
+    NSLog("[DEBUG] downloader(): creating ModelDownloader with directory = \(dir?.path ?? "nil")")
     let dl = ModelDownloader(modelsDirectory: dir)
+    NSLog("[DEBUG] downloader(): ModelDownloader.modelsDirectory = \(dl.modelsDirectory.path)")
     _nativeDownloader = dl
     return dl
   }
 
   func delegateDownload(with modelInfo: Any?, proxy: LiteRTLMModelDownloaderProxy) {
-    // Titanium passes args as NSArray – first element is the actual dict
-    let args = modelInfo as? [Any] ?? []
-    let params = args.first as? [AnyHashable: Any]
-    NSLog("[DEBUG] delegateDownload: args.count=\(args.count), params=\(params ?? [:])")
-    guard let params = params else {
-      NSLog("[DEBUG] delegateDownload: cannot extract params from args")
+    NSLog("[DEBUG] delegateDownload: modelInfo type = \(type(of: modelInfo))")
+    NSLog("[DEBUG] delegateDownload: modelInfo = \(modelInfo as Any)")
+
+    // Titanium passes JS objects as NSArray – first element is the params NSDictionary
+    // Use NSDictionary directly to avoid Swift bridging issues with [AnyHashable: Any]
+    let nsDict: NSDictionary?
+
+    if let array = modelInfo as? [Any], let first = array.first as? NSDictionary {
+      NSLog("[DEBUG] delegateDownload: received NSArray with \(array.count) elements")
+      nsDict = first
+    } else if let dict = modelInfo as? NSDictionary {
+      NSLog("[DEBUG] delegateDownload: received direct NSDictionary")
+      nsDict = dict
+    } else {
+      NSLog("[DEBUG] delegateDownload: ERROR - unexpected type")
+      nsDict = nil
+    }
+
+    NSLog("[DEBUG] delegateDownload: nsDict = \(nsDict ?? [:])")
+
+    guard let nsDict = nsDict else {
+      proxy.fireEvent("downloaderror", with: ["message": "Invalid parameters received"])
       return
     }
-    let urlStr = params["url"] as? String ?? ""
-    let fileName = params["fileName"] as? String
-    let expectedSize = (params["expectedSize"] as? NSNumber).map { $0.int64Value }
-    NSLog("[DEBUG] delegateDownload: url=\(urlStr) fileName=\(fileName ?? "nil") expectedSize=\(expectedSize?.description ?? "nil")")
+
+    let urlStr = nsDict["url"] as? String ?? ""
+    let fileName = nsDict["fileName"] as? String
+    let expectedSize = (nsDict["expectedSize"] as? NSNumber).map { $0.int64Value }
+    NSLog("[DEBUG] delegateDownload: url=\(urlStr)")
+    NSLog("[DEBUG] delegateDownload: fileName=\(fileName ?? "nil")")
+    NSLog("[DEBUG] delegateDownload: expectedSize=\(expectedSize?.description ?? "nil")")
 
     guard let url = URL(string: urlStr) else {
-      NSLog("[DEBUG] delegateDownload: invalid URL")
+      NSLog("[DEBUG] delegateDownload: ERROR - invalid URL: \(urlStr)")
       proxy.fireEvent("downloaderror", with: ["message": "Invalid URL: \(urlStr)"])
       return
     }
@@ -430,23 +517,35 @@ class DeMarcbenderLitertlmModule: TiModule {
   }
 
   func delegateIsDownloaded(with modelInfo: Any?, proxy: LiteRTLMModelDownloaderProxy) -> Bool {
-    let args = modelInfo as? [Any] ?? []
-    guard let params = args.first as? [AnyHashable: Any] else { return false }
-    let fileName = params["fileName"] as? String ?? ""
+    let nsDict: NSDictionary?
+    if let array = modelInfo as? [Any], let first = array.first as? NSDictionary {
+      nsDict = first
+    } else {
+      nsDict = modelInfo as? NSDictionary
+    }
+    let fileName = nsDict?["fileName"] as? String ?? ""
     return self.downloader().isDownloaded(fileName: fileName)
   }
 
   func delegateModelPath(for modelInfo: Any?, proxy: LiteRTLMModelDownloaderProxy) -> String? {
-    let args = modelInfo as? [Any] ?? []
-    guard let params = args.first as? [AnyHashable: Any] else { return nil }
-    let fileName = params["fileName"] as? String ?? ""
+    let nsDict: NSDictionary?
+    if let array = modelInfo as? [Any], let first = array.first as? NSDictionary {
+      nsDict = first
+    } else {
+      nsDict = modelInfo as? NSDictionary
+    }
+    let fileName = nsDict?["fileName"] as? String ?? ""
     return self.downloader().modelPath(fileName: fileName)?.path
   }
 
   func delegateDeleteModel(with modelInfo: Any?, proxy: LiteRTLMModelDownloaderProxy) {
-    let args = modelInfo as? [Any] ?? []
-    guard let params = args.first as? [AnyHashable: Any] else { return }
-    let fileName = params["fileName"] as? String ?? ""
+    let nsDict: NSDictionary?
+    if let array = modelInfo as? [Any], let first = array.first as? NSDictionary {
+      nsDict = first
+    } else {
+      nsDict = modelInfo as? NSDictionary
+    }
+    let fileName = nsDict?["fileName"] as? String ?? ""
     try? self.downloader().deleteModel(fileName: fileName)
   }
 
