@@ -408,6 +408,56 @@ class DeMarcbenderLitertlmModule: TiModule {
     return "1.0.0"
   }
 
+  @objc(closeConversation:)
+  func closeConversation(arguments: [Any]?) {
+    NSLog("[DEBUG] closeConversation() CALLED")
+    guard let args = arguments, let first = args.first else {
+      NSLog("[DEBUG] closeConversation: no conversation argument")
+      return
+    }
+
+    // Titanium may wrap the proxy in an NSArray
+    let proxy: LiteRTLMConversationProxy
+    if let arr = first as? [Any], let p = arr.first as? LiteRTLMConversationProxy {
+      proxy = p
+    } else if let p = first as? LiteRTLMConversationProxy {
+      proxy = p
+    } else {
+      NSLog("[DEBUG] closeConversation: invalid argument type \(type(of: first))")
+      return
+    }
+
+    NSLog("[DEBUG] closeConversation: closing conversation")
+    proxy._conversation?.close()
+    proxy._isActive = false
+    proxy._history = []
+    proxy.fireEvent("close", with: [:])
+  }
+
+  @objc(unloadEngine:)
+  func unloadEngine(arguments: [Any]?) {
+    NSLog("[DEBUG] unloadEngine() CALLED")
+    guard let args = arguments, let first = args.first else {
+      NSLog("[DEBUG] unloadEngine: no engine argument")
+      return
+    }
+
+    // Titanium may wrap the proxy in an NSArray
+    let proxy: LiteRTLMEngineProxy
+    if let arr = first as? [Any], let p = arr.first as? LiteRTLMEngineProxy {
+      proxy = p
+    } else if let p = first as? LiteRTLMEngineProxy {
+      proxy = p
+    } else {
+      NSLog("[DEBUG] unloadEngine: invalid argument type \(type(of: first))")
+      return
+    }
+
+    NSLog("[DEBUG] unloadEngine: unloading engine")
+    // Call the proxy’s unloadEngine
+    proxy.unloadEngine()
+  }
+
   @objc(example:)
   func example(arguments: [Any]?) -> String? {
     NSLog("[DEBUG] example() CALLED")

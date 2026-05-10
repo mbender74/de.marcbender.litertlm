@@ -75,7 +75,7 @@ public class LiteRTLMEngineProxy: TiProxy {
   }
 
   @objc
-  public func unload() {
+  public func unloadEngine() {
     DispatchQueue.main.async {
       guard let engine = self._engine else { return }
       engine.unload()

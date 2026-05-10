@@ -229,7 +229,7 @@ public class LiteRTLMConversationProxy: TiProxy {
   }
 
   @objc
-  public func cancel() {
+  public func cancelStream() {
     DispatchQueue.main.async { [weak self] in
       self?._conversation?.cancel()
       self?._isActive = false
@@ -238,7 +238,7 @@ public class LiteRTLMConversationProxy: TiProxy {
   }
 
   @objc
-  public func close() {
+  public func closeConversation() {
     DispatchQueue.main.async { [weak self] in
       self?._conversation?.close()
       self?._isActive = false
