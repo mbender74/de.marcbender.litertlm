@@ -162,6 +162,81 @@ private func pollDownload(proxy: LiteRTLMModelDownloaderProxy, work: @escaping (
 
 Verwende `NSLog("[DEBUG] ...")` für alle diagnostischen Ausgaben.
 
+## Kritische Titanium-Swift-Pattern
+
+### NSArray-Wrapper für TiProxy-Parameter
+Titanium wrapp't TiProxy-Objekte die von JS an Swift übergeben werden in `__NSArrayM`.
+Jede `@objc`-Methode die einen TiProxy erwartet muss dies entpacken:
+
+```swift
+@objc func myMethod(_ arg: Any) {
+  // Entpacken
+  let proxy: MyProxy
+  if let arr = arg as? [Any], let first = arr.first as? MyProxy {
+    proxy = first
+  } else if let p = arg as? MyProxy {
+    proxy = p
+  } else {
+    return // Invalid type
+  }
+  // Werte SOFORT kopieren bevor proxy vom JS GC befreit wird!
+}
+```
+
+### Event-Fire auf dem Modul, nicht auf dem Proxy
+JS-Listener die auf `litertlm.addEventListener(...)` registriert sind, hören auf das **Modul**.
+Events müssen vom Modul gefeuert werden, nicht vom Proxy:
+
+```swift
+// FALSCH: feuert auf dem engine Proxy (JS hört nicht zu)
+self.fireEvent("conversationcreated", with: [...])
+
+// RICHTIG: feuert auf dem Modul (JS hört hier zu)
+if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {
+  module.fireEvent("conversationcreated", with: [...])
+}
+```
+
+### replaceValue() für Proxy-Registrierung
+Bevor ein Proxy an JS übergeben werden kann (per Event oder als Property) muss er bei
+Titaniums JS-Bridge registriert werden:
+
+```swift
+let proxy = LiteRTLMConversationProxy()
+proxy._conversation = conversation
+self.replaceValue(proxy, forKey: "conversation", notification: false)  // Pflicht!
+module.fireEvent("conversationcreated", with: ["conversation": proxy])
+```
+
+### LiteRTLM NULL-Config für Conversation
+Die LiteRTLM-Version in diesem Projekt unterstützt `litert_lm_conversation_create()` nur
+mit NULL-Config. Die builder-style Config-Setter funktionieren nicht:
+
+```swift
+// FUNKTIONIERT: NULL config
+let cConversation = litert_lm_conversation_create(engine, nil)
+
+// FUNKTIONIERT NICHT: builder-style config (gibt NULL zurück)
+let convConfig = litert_lm_conversation_config_create()
+litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
+let cConversation = litert_lm_conversation_create(engine, convConfig) // ← NULL!
+```
+
+Custom-Parameter (maxOutputTokens, sampler, systemPrompt) werden daher nicht angewendet.
+
+### Streaming-Events
+`sendStream()` feuert folgende Events auf dem **conversation Proxy** (nicht Modul):
+
+| Event | Payload | Bedeutung |
+|-------|---------|-----------|
+| `streamstart` | `{}` | Stream beginnt |
+| `token` | `{ token: "Text" }` | Pro Token (inkrementell) |
+| `streamcomplete` | `{}` | Stream abgeschlossen |
+| `streamend` | `{}` | Stream beendet |
+| `streamerror` | `{ message: "..." }` | Fehler |
+
+JS muss `setupStreamListeners()` nach `conversationcreated` aufrufen um die Listener zu registrieren.
+
 ## Dateien im Überblick
 
 ```
@@ -190,14 +265,16 @@ ios/Classes/
 ### ✅ Funktioniert
 - Modul-Startup, `createDownloader()`, `isDownloaded()`, `download()`
 - Progress-Events: `downloadprogress`, `downloadcomplete`, `downloaderror`
-- Alle Proxy-Klassen erstellen sich ohne Crash
+- Engine-Initialisierung, `createEngineWithConfig()`
+- Conversation-Erstellung, `createConversationWithConfig()`
+- **Streaming**: `sendStream()` mit Token-Events, vollständige Antwort
+- Events korrekt geroutet (Module vs. Proxy)
 
 ### 🔧 TODO
-- [ ] `createEngineWithConfig()` und Engine-Inferenz testen
-- [ ] `sendStream()` für Conversation testen
-- [ ] Andere Proxies (`LiteRTLMEngineProxy`, `LiteRTLMConversationProxy`) auf externes Import-Pattern prüfen
 - [ ] Tool Calling, Multimodale Eingabe
+- [ ] LiteRTLM updaten für builder-style config support (oder Session-API als Fallback)
 
 ### ⚠️ Bekannte Probleme
 - `LiteRTLMEngineProxy` hält `LMEngine` direkt (externer Typ) – muss ggf. refactored werden
 - `LiteRTLMConversationProxy` hält `Conversation` direkt – muss ggf. refactored werden
+- Custom-Config-Parameter werden für Conversations nicht angewendet (NULL-Config Limitierung)
