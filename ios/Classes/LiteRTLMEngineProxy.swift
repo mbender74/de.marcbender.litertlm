@@ -139,23 +139,15 @@ public class LiteRTLMEngineProxy: TiProxy {
 
   @objc
   public func createConversationWithConfig(_ configuration: Any) {
-    NSLog("[DEBUG] createConversationWithConfig CALLED, type=\(type(of: configuration))")
-
     // Titanium wraps TiProxy in __NSArrayM - extract the proxy
     let config: LiteRTLMConversationConfiguration
     if let arr = configuration as? [Any], let c = arr.first as? LiteRTLMConversationConfiguration {
       config = c
-      NSLog("[DEBUG] createConversationWithConfig: proxy extracted from array")
     } else if let c = configuration as? LiteRTLMConversationConfiguration {
       config = c
-      NSLog("[DEBUG] createConversationWithConfig: proxy extracted directly")
     } else {
       // Fallback: use KVC on NSObject
-      NSLog("[DEBUG] createConversationWithConfig: direct cast failed, trying KVC")
-      guard let obj = configuration as? NSObject else {
-        NSLog("[DEBUG] createConversationWithConfig: cannot cast to NSObject")
-        return
-      }
+      guard let obj = configuration as? NSObject else { return }
       let maxOutputTokens = obj.value(forKey: "maxOutputTokens") as? Int32 ?? 2048
       let samplerType = obj.value(forKey: "samplerType") as? String ?? "balanced"
       let toolExecutionMode = obj.value(forKey: "toolExecutionMode") as? String ?? "automatic"
@@ -182,7 +174,6 @@ public class LiteRTLMEngineProxy: TiProxy {
         }
         nativeTools.append(Tool(name: toolName, description: toolDesc, parameters: toolParams, execute: { _ in return [:] }))
       }
-      NSLog("[DEBUG] createConversationWithConfig: values copied via KVC (toolsCount=\(nativeTools.count))")
 
       // Build config and create conversation
       DispatchQueue.main.async { [weak self] in
@@ -203,18 +194,26 @@ public class LiteRTLMEngineProxy: TiProxy {
           let proxy = LiteRTLMConversationProxy()
           proxy._conversation = conversation
           proxy._engineProxy = self
-          self.fireEvent("conversationcreated", with: ["conversation": proxy])
-          NSLog("[DEBUG] createConversationWithConfig: conversationcreated FIRED (KVC path)")
+          self.replaceValue(proxy, forKey: "conversation", notification: false)
+          // Fire on the module, not the engine proxy (JS listener is on litertlm module)
+          if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {
+            module.fireEvent("conversationcreated", with: ["conversation": proxy])
+          }
         } catch {
           self._status = "error"
           self._lastError = error.localizedDescription
-          self.fireEvent("error", with: ["message": error.localizedDescription])
+          if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {
+            module.fireEvent("error", with: ["message": error.localizedDescription])
+          }
         }
       }
       return
     }
 
     // CRITICAL: Copy all values IMMEDIATELY before any async dispatch.
+    // Titanium retains the proxy for the method call, but once we dispatch
+    // to DispatchQueue.main.async, the JS GC can free the underlying JS object.
+    // We must extract all scalar values now while the proxy is still valid.
     let maxOutputTokens = config.maxOutputTokens
     let samplerType = config.samplerType
     let toolExecutionMode = config.toolExecutionMode
@@ -245,31 +244,22 @@ public class LiteRTLMEngineProxy: TiProxy {
         execute: { _ in return [:] }
       ))
     }
-    NSLog("[DEBUG] createConversationWithConfig: values copied (toolsCount=\(nativeTools.count))")
 
     DispatchQueue.main.async { [weak self] in
-      guard let self = self else {
-        NSLog("[DEBUG] createConversationWithConfig - self is nil")
-        return
-      }
-      NSLog("[DEBUG] createConversationWithConfig - self exists, building config")
+      guard let self = self else { return }
       do {
         guard let engine = self._engine else {
-          NSLog("[DEBUG] createConversationWithConfig - _engine is nil")
           self._status = "error"
           self._lastError = "Engine is not ready or not initialized"
           self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           return
         }
-        NSLog("[DEBUG] createConversationWithConfig - engine exists")
         guard engine.isReady else {
-          NSLog("[DEBUG] createConversationWithConfig - engine not ready")
           self._status = "error"
           self._lastError = "Engine is not ready or not initialized"
           self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           return
         }
-        NSLog("[DEBUG] createConversationWithConfig - engine isReady, building ConversationConfiguration")
 
         // Build the native config from the copied values (no JS pointer deref)
         var convConfig = ConversationConfiguration()
@@ -298,21 +288,23 @@ public class LiteRTLMEngineProxy: TiProxy {
           convConfig = convConfig.tools(nativeTools)
         }
 
-        NSLog("[DEBUG] createConversationWithConfig: calling engine.createConversation()")
         let conversation = try engine.createConversation(configuration: convConfig)
-        NSLog("[DEBUG] createConversationWithConfig: createConversation() done")
 
         let proxy = LiteRTLMConversationProxy()
         proxy._conversation = conversation
         proxy._engineProxy = self
-        NSLog("[DEBUG] createConversationWithConfig: about to fire conversationcreated")
-        self.fireEvent("conversationcreated", with: ["conversation": proxy])
-        NSLog("[DEBUG] createConversationWithConfig: conversationcreated event FIRED")
+        self.replaceValue(proxy, forKey: "conversation", notification: false)
+        // Fire on the module, not the engine proxy (JS listener is on litertlm module)
+        if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {
+          module.fireEvent("conversationcreated", with: ["conversation": proxy])
+        }
       } catch {
         self._status = "error"
         self._lastError = error.localizedDescription
-        NSLog("[DEBUG] createConversationWithConfig ERROR - \(error.localizedDescription)")
-        self.fireEvent("error", with: ["message": error.localizedDescription])
+        // Fire on the module, not the engine proxy (JS listener is on litertlm module)
+        if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {
+          module.fireEvent("error", with: ["message": error.localizedDescription])
+        }
       }
     }
   }

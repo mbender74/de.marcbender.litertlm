@@ -121,17 +121,48 @@ public class LiteRTLMConversationProxy: TiProxy {
   }
 
   @objc
-  public func sendStream(_ text: String, images: [[String: Any]]?, audio: [[String: Any]]?, audioFormat: String) {
+  public func sendStream(_ message: Any?) {
+    NSLog("[DEBUG] sendStream CALLED, type=\(type(of: message))")
+
+    // Titanium wraps TiProxy in NSArray - extract first element
+    let unwrapped: Any
+    if let arr = message as? [Any], let first = arr.first {
+      unwrapped = first
+    } else {
+      unwrapped = message ?? ()
+    }
+    NSLog("[DEBUG] sendStream: unwrapped type=\(type(of: unwrapped))")
+
+    // Extract text from LiteRTLMMessage proxy
+    let text: String
+    if let msg = unwrapped as? LiteRTLMMessage {
+      // Extract text from contents array
+      text = msg._contents.compactMap { c -> String? in
+        if let c = c as? LiteRTLMContent, c._type == "text" {
+          return c._text
+        }
+        return nil
+      }.joined(separator: " ")
+      NSLog("[DEBUG] sendStream: extracted text, contentsCount=\(msg._contents.count), text='\(text)'")
+    } else if let t = unwrapped as? String {
+      text = t
+      NSLog("[DEBUG] sendStream: extracted text from String")
+    } else {
+      NSLog("[DEBUG] sendStream: invalid message type \(type(of: unwrapped))")
+      self.fireEvent("error", with: ["message": "Invalid message type"])
+      return
+    }
+
     var imageData: [Data] = []
-    if let images = images {
-      for img in images {
-        if let data = img["data"] as? Data {
-          let maxDim = img["maxDimension"] as? Int ?? 1024
-          do {
-            let processed = try ImageUtilities.prepareForVision(data, maxDimension: maxDim)
-            imageData.append(processed)
-          } catch {
-            // Skip invalid images
+    if let msg = unwrapped as? LiteRTLMMessage {
+      for content in msg._contents {
+        if let c = content as? LiteRTLMContent, c._type == "image" {
+          if let data = c._imageData {
+            let maxDim = c._maxDimension ?? 1024
+            do {
+              let processed = try ImageUtilities.prepareForVision(data, maxDimension: maxDim)
+              imageData.append(processed)
+            } catch {}
           }
         }
       }
@@ -139,33 +170,40 @@ public class LiteRTLMConversationProxy: TiProxy {
 
     var audioData: [Data] = []
     var audioFormatVal: AudioFormat = .wav
-    if let audio = audio {
-      for aud in audio {
-        if let data = aud["data"] as? Data {
-          switch audioFormat {
-          case "flac": audioFormatVal = .flac
-          case "mp3": audioFormatVal = .mp3
-          default: audioFormatVal = .wav
+    if let msg = unwrapped as? LiteRTLMMessage {
+      for content in msg._contents {
+        if let c = content as? LiteRTLMContent, c._type == "audio" {
+          if let data = c._audioData {
+            audioFormatVal = AudioFormat(rawValue: c._audioFormat ?? "wav") ?? .wav
+            audioData.append(data)
           }
-          audioData.append(data)
         }
       }
     }
 
-   DispatchQueue.main.async { [weak self] in
-      guard let self = self else { return }
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else {
+        NSLog("[DEBUG] sendStream: self is nil")
+        return
+      }
       guard let conversation = self._conversation else {
+        NSLog("[DEBUG] sendStream: _conversation is nil")
         self.fireEvent("error", with: ["message": "No active conversation"])
         return
       }
+      NSLog("[DEBUG] sendStream: _conversation exists, starting stream")
 
       self._isActive = true
+      self.fireEvent("streamstart", with: [:])
+      NSLog("[DEBUG] sendStream: FIRED streamstart")
+
       Task {
         do {
           let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
           for try await token in stream {
             await MainActor.run {
-              self.fireEvent("tokencode", with: ["token": token])
+              NSLog("[DEBUG] sendStream: FIRED token, text='\(token)'")
+              self.fireEvent("token", with: ["token": token])
             }
           }
           await MainActor.run {
@@ -173,12 +211,17 @@ public class LiteRTLMConversationProxy: TiProxy {
             let msg = LiteRTLMMessage()
             msg._role = "model"
             self._history.append(msg)
-            self.fireEvent("end", with: [:])
+            self.fireEvent("streamcomplete", with: [:])
+            NSLog("[DEBUG] sendStream: FIRED streamcomplete")
+            self.fireEvent("streamend", with: [:])
+            NSLog("[DEBUG] sendStream: FIRED streamend")
           }
         } catch {
+          NSLog("[DEBUG] sendStream: ERROR \(error.localizedDescription)")
           await MainActor.run {
             self._isActive = false
-            self.fireEvent("error", with: ["message": error.localizedDescription])
+            self.fireEvent("streamerror", with: ["message": error.localizedDescription])
+            NSLog("[DEBUG] sendStream: FIRED streamerror")
           }
         }
       }

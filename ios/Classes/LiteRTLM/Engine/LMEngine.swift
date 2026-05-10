@@ -137,27 +137,24 @@ public final class LMEngine: @unchecked Sendable {
     }
 
     /// Create a conversation with the given configuration.
+    ///
+    /// Note: This LiteRTLM version only accepts NULL config for conversation creation.
+    /// Custom parameters (maxOutputTokens, sampler, systemPrompt, tools) are not applied
+    /// because the C API's builder-style config setters are broken in this version.
     public func createConversation(configuration: ConversationConfiguration) throws -> LMConversation {
-        NSLog("[DEBUG] LMEngine: createConversation START")
         guard let engine = cEngine else {
-            NSLog("[DEBUG] LMEngine: createConversation FAILED - cEngine is nil")
             throw LiteRTLMError.engineNotReady
         }
-        NSLog("[DEBUG] LMEngine: cEngine OK")
 
         guard let sessionConfig = litert_lm_session_config_create() else {
-            NSLog("[DEBUG] LMEngine: createConversation FAILED - session_config_create returned NULL")
             throw LiteRTLMError.conversationCreationFailed
         }
         defer { litert_lm_session_config_delete(sessionConfig) }
-        NSLog("[DEBUG] LMEngine: session_config OK")
 
         litert_lm_session_config_set_max_output_tokens(sessionConfig, configuration.maxOutputTokens)
-        NSLog("[DEBUG] LMEngine: max_output_tokens=\(configuration.maxOutputTokens)")
 
         var samplerParams = configuration.sampler.toCParams()
         litert_lm_session_config_set_sampler_params(sessionConfig, &samplerParams)
-        NSLog("[DEBUG] LMEngine: sampler_params OK")
 
         // Build tools JSON if any
         let toolsJSON: String? = configuration.tools.isEmpty ? nil : {
@@ -168,43 +165,28 @@ public final class LMEngine: @unchecked Sendable {
             }
             return nil
         }()
-        NSLog("[DEBUG] LMEngine: tools=\(configuration.tools.count), toolsJSON=\(toolsJSON != nil ? "present" : "nil")")
 
         // New API: create empty config, then set properties via setters
         guard let convConfig = litert_lm_conversation_config_create() else {
-            NSLog("[DEBUG] LMEngine: createConversation FAILED - conversation_config_create returned NULL")
             throw LiteRTLMError.conversationCreationFailed
         }
-        NSLog("[DEBUG] LMEngine: conversation_config OK")
 
         // Set session config
         litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
-        NSLog("[DEBUG] LMEngine: set session_config OK")
-
-        // PhoneClaw only calls set_system_message when there's actual content
-        // Omit when nil to avoid potential API issues
 
         // PhoneClaw only calls set_tools when there's actual content
         // Use withCString like PhoneClaw does
         if let toolsJSON = toolsJSON {
             toolsJSON.withCString { litert_lm_conversation_config_set_tools(convConfig, $0) }
         }
-        NSLog("[DEBUG] LMEngine: set tools OK")
 
         // Try with NULL config first (uses defaults) – works on this LiteRTLM version
         guard let cConversation = litert_lm_conversation_create(engine, nil) else {
-            NSLog("[DEBUG] LMEngine: createConversation FAILED - litert_lm_conversation_create(NULL) returned NULL")
             litert_lm_conversation_config_delete(convConfig)
             throw LiteRTLMError.conversationCreationFailed
         }
         litert_lm_conversation_config_delete(convConfig)
-        litert_lm_session_config_delete(sessionConfig)
-        NSLog("[DEBUG] LMEngine: createConversation SUCCESS (NULL config)")
-
-        // Note: Custom config params (maxOutputTokens, sampler, systemPrompt, tools)
-        // are not applied because this LiteRTLM version only accepts NULL config.
-        // The C API's builder-style config setters seem to be broken.
-        // Future: Upgrade LiteRTLM or switch to Session API for custom params.
+        // Note: sessionConfig is deleted by defer, don't double-free!
 
         return LMConversation(engine: self, cConversation: cConversation, configuration: configuration)
     }

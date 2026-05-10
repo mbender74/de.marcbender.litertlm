@@ -59,52 +59,34 @@ public class LiteRTLMConversationConfiguration: TiProxy {
   }
 
   public func toNative() -> ConversationConfiguration {
-    NSLog("[DEBUG] toNative() START")
     var config = ConversationConfiguration()
-    NSLog("[DEBUG] toNative() created default config")
     config = config.maxOutputTokens(_maxOutputTokens)
-    NSLog("[DEBUG] toNative() set maxOutputTokens")
     config = config.maxImageDimension(_maxImageDimension)
-    NSLog("[DEBUG] toNative() set maxImageDimension")
 
     if let sampler = sampler {
-      NSLog("[DEBUG] toNative() using custom sampler")
       config = config.sampler(sampler.toNative())
     } else if _samplerType == "greedy" {
-      NSLog("[DEBUG] toNative() using greedy sampler")
       config = config.sampler(.greedy)
     } else if _samplerType == "creative" {
-      NSLog("[DEBUG] toNative() using creative sampler")
       config = config.sampler(.creative)
     } else {
-      NSLog("[DEBUG] toNative() using balanced sampler")
       config = config.sampler(.balanced)
     }
-    NSLog("[DEBUG] toNative() set sampler")
 
     if _toolExecutionMode == "manual" {
-      NSLog("[DEBUG] toNative() set manual execution")
       config = config.toolExecution(.manual)
     } else {
-      NSLog("[DEBUG] toNative() set automatic execution")
       config = config.toolExecution(.automatic)
     }
-    NSLog("[DEBUG] toNative() set toolExecution")
 
     if let prompt = _systemPrompt {
-      NSLog("[DEBUG] toNative() set systemPrompt: \(prompt.prefix(100))")
       config = config.systemPrompt(prompt)
-    } else {
-      NSLog("[DEBUG] toNative() no systemPrompt")
     }
-    NSLog("[DEBUG] toNative() about to map tools, _tools.count = \(_tools.count)")
 
     let nativeTools = _tools.map { $0.toNative() }
-    NSLog("[DEBUG] toNative() tools mapped, count = \(nativeTools.count)")
     if !nativeTools.isEmpty {
       config = config.tools(nativeTools)
     }
-    NSLog("[DEBUG] toNative() RETURNING config")
 
     return config
   }
