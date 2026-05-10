@@ -35,25 +35,19 @@ public class LiteRTLMSessionProxy: TiProxy {
 
   @objc
   public func generate(_ prompt: String, template: String?) {
-    let task = Task<String?, Error> {
+    DispatchQueue.main.async {
       do {
-        guard let session = _session else { throw LiteRTLMError.noActiveSession }
+        guard let session = self._session else {
+          self.fireEvent("error", with: ["message": "No active session"])
+          return
+        }
         let template: PromptTemplate = templateToNative(template) ?? .gemma
-        let result = try await session.generate(prompt, template: template)
-        await MainActor.run {
-          fireEvent("generatelogic", with: ["result": result])
-        }
-        return nil
+        let result = try session.generate(prompt, template: template)
+        self.fireEvent("generatelogic", with: ["result": result])
       } catch {
-        await MainActor.run {
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
-        return nil
+        self.fireEvent("error", with: ["message": error.localizedDescription])
       }
     }
-    let taskId = String(_taskCounter); _taskCounter += 1
-    _activeTasks[taskId] = task
-    _ = _activeTasks.removeValue(forKey: taskId)
   }
 
   @objc
@@ -85,88 +79,67 @@ public class LiteRTLMSessionProxy: TiProxy {
       }
     }
 
-    let task = Task<String?, Error> {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
       do {
-        guard let session = _session else { throw LiteRTLMError.noActiveSession }
+        guard let session = self._session else {
+          self.fireEvent("error", with: ["message": "No active session"])
+          return
+        }
         let template: PromptTemplate = templateToNative(template) ?? .gemma
-        let result = try await session.generate(text: text, images: imageData, audio: audioData, template: template)
-        await MainActor.run {
-          fireEvent("generatelogic", with: ["result": result])
-        }
-        return nil
+        let result = try session.generate(text: text, images: imageData, audio: audioData, template: template)
+        self.fireEvent("generatelogic", with: ["result": result])
       } catch {
-        await MainActor.run {
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
-        return nil
+        self.fireEvent("error", with: ["message": error.localizedDescription])
       }
     }
-    let taskId = String(_taskCounter); _taskCounter += 1
-    _activeTasks[taskId] = task
-    _ = _activeTasks.removeValue(forKey: taskId)
   }
 
   @objc
   public func generateStream(_ prompt: String, template: String?) {
-    guard let session = _session else {
-      fireEvent("error", with: ["message": "No active session"])
-      return
-    }
-    let template: PromptTemplate = templateToNative(template) ?? .gemma
-    let stream = session.generateStream(prompt, template: template)
+   DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      guard let session = self._session else {
+        self.fireEvent("error", with: ["message": "No active session"])
+        return
+      }
+      let template: PromptTemplate = templateToNative(template) ?? .gemma
+      let stream = session.generateStream(prompt, template: template)
 
-    Task {
-      _isActive = true
-      do {
-        for try await token in stream {
+      self._isActive = true
+      self.fireEvent("streamstart", with: [:])
+
+      Task {
+        do {
+          for try await token in stream {
+            await MainActor.run {
+              self.fireEvent("tokencode", with: ["token": token])
+            }
+          }
           await MainActor.run {
-            fireEvent("tokencode", with: ["token": token])
+            self._isActive = false
+            self.fireEvent("end", with: [:])
+          }
+        } catch {
+          await MainActor.run {
+            self._isActive = false
+            self.fireEvent("error", with: ["message": error.localizedDescription])
           }
         }
-        await MainActor.run {
-          _isActive = false
-          fireEvent("end", with: [:])
-        }
-      } catch {
-        await MainActor.run {
-          _isActive = false
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
       }
     }
-  }
-
-  @objc
-  public func collectStream(_ prompt: String, template: String?) {
-    let task: Task<String?, Error> = Task {
-      do {
-        guard let session = _session else { throw LiteRTLMError.noActiveSession }
-        let template: PromptTemplate = templateToNative(template) ?? .gemma
-        let stream = session.generateStream(prompt, template: template)
-        let result = try await stream.collect()
-        await MainActor.run {
-          fireEvent("generatelogic", with: ["result": result])
-        }
-        return result
-      } catch {
-        await MainActor.run {
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
-        return ""
-      }
-    }
-    let taskId = String(_taskCounter); _taskCounter += 1
-    _activeTasks[taskId] = task
-    _ = _activeTasks.removeValue(forKey: taskId)
   }
 
   @objc
   public func close() {
-    _session?.close()
-    _isActive = false
-    fireEvent("close", with: [:])
+    DispatchQueue.main.async { [weak self] in
+      self?._session?.close()
+      self?._isActive = false
+      self?.fireEvent("close", with: [:])
+    }
   }
 
+  @objc
   public func getBenchmarkInfo() -> [String: Any]? {
     guard let session = _session else { return nil }
     guard let info = session.benchmarkInfo() else { return nil }

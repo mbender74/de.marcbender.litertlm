@@ -1,7 +1,7 @@
-
 import CLiteRTLM
 import UIKit
 import TitaniumKit
+
 /// The lifecycle state of the engine.
 public enum EngineStatus: Sendable {
     case notLoaded
@@ -10,14 +10,17 @@ public enum EngineStatus: Sendable {
     case error(LiteRTLMError)
 }
 
-/// Actor-based LLM engine managing the full lifecycle of a LiteRT-LM model.
+/// LLM engine managing the full lifecycle of a LiteRT-LM model.
+///
+/// Uses `OpaquePointer?` directly (like PhoneClaw) for all C API pointers.
+/// No actor, no Swift concurrency overhead – all operations are synchronous.
 ///
 /// ```swift
 /// let config = EngineConfiguration(modelPath: modelURL).backend(.gpu)
 /// let engine = LMEngine(configuration: config)
-/// try await engine.load()
+/// engine.load()
 /// ```
-public actor LMEngine {
+public final class LMEngine: @unchecked Sendable {
 
     public private(set) var status: EngineStatus = .notLoaded
 
@@ -28,7 +31,8 @@ public actor LMEngine {
 
     public let configuration: EngineConfiguration
 
-    nonisolated(unsafe) var cEngine: OpaquePointer?
+    /// Raw C engine pointer
+    private var cEngine: OpaquePointer?
 
     public init(configuration: EngineConfiguration) {
         self.configuration = configuration
@@ -41,7 +45,7 @@ public actor LMEngine {
     }
 
     /// Load the model into memory.
-    public func load() async throws {
+    public func load() throws {
         guard !isReady else { throw LiteRTLMError.engineAlreadyLoaded }
 
         let config = configuration
@@ -55,7 +59,7 @@ public actor LMEngine {
 
         status = .loading
 
-        // Set log level to INFO to get maximum debugging output from CLiteRTLM
+        // Set log level to VERBOSE
         litert_lm_set_min_log_level(0)
 
         // Convert Swift strings to null-terminated C strings
@@ -109,10 +113,99 @@ public actor LMEngine {
         status = .notLoaded
     }
 
-    func requireReady() throws -> OpaquePointer {
+    /// Create a session with the given configuration.
+    public func createSession(configuration: SessionConfiguration) throws -> LMSession {
         guard let engine = cEngine else {
             throw LiteRTLMError.engineNotReady
         }
-        return engine
+
+        guard let sessionConfig = litert_lm_session_config_create() else {
+            throw LiteRTLMError.sessionCreationFailed
+        }
+        defer { litert_lm_session_config_delete(sessionConfig) }
+
+        litert_lm_session_config_set_max_output_tokens(sessionConfig, configuration.maxOutputTokens)
+
+        var samplerParams = configuration.sampler.toCParams()
+        litert_lm_session_config_set_sampler_params(sessionConfig, &samplerParams)
+
+        guard let cSession = litert_lm_engine_create_session(engine, sessionConfig) else {
+            throw LiteRTLMError.sessionCreationFailed
+        }
+
+        return LMSession(engine: self, cSession: cSession, configuration: configuration)
+    }
+
+    /// Create a conversation with the given configuration.
+    public func createConversation(configuration: ConversationConfiguration) throws -> LMConversation {
+        NSLog("[DEBUG] LMEngine: createConversation START")
+        guard let engine = cEngine else {
+            NSLog("[DEBUG] LMEngine: createConversation FAILED - cEngine is nil")
+            throw LiteRTLMError.engineNotReady
+        }
+        NSLog("[DEBUG] LMEngine: cEngine OK")
+
+        guard let sessionConfig = litert_lm_session_config_create() else {
+            NSLog("[DEBUG] LMEngine: createConversation FAILED - session_config_create returned NULL")
+            throw LiteRTLMError.conversationCreationFailed
+        }
+        defer { litert_lm_session_config_delete(sessionConfig) }
+        NSLog("[DEBUG] LMEngine: session_config OK")
+
+        litert_lm_session_config_set_max_output_tokens(sessionConfig, configuration.maxOutputTokens)
+        NSLog("[DEBUG] LMEngine: max_output_tokens=\(configuration.maxOutputTokens)")
+
+        var samplerParams = configuration.sampler.toCParams()
+        litert_lm_session_config_set_sampler_params(sessionConfig, &samplerParams)
+        NSLog("[DEBUG] LMEngine: sampler_params OK")
+
+        // Build tools JSON if any
+        let toolsJSON: String? = configuration.tools.isEmpty ? nil : {
+            let schemas = configuration.tools.map { $0.toJSONSchema() }
+            if let data = try? JSONSerialization.data(withJSONObject: schemas),
+               let str = String(data: data, encoding: .utf8) {
+                return str
+            }
+            return nil
+        }()
+        NSLog("[DEBUG] LMEngine: tools=\(configuration.tools.count), toolsJSON=\(toolsJSON != nil ? "present" : "nil")")
+
+        // New API: create empty config, then set properties via setters
+        guard let convConfig = litert_lm_conversation_config_create() else {
+            NSLog("[DEBUG] LMEngine: createConversation FAILED - conversation_config_create returned NULL")
+            throw LiteRTLMError.conversationCreationFailed
+        }
+        NSLog("[DEBUG] LMEngine: conversation_config OK")
+
+        // Set session config
+        litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
+        NSLog("[DEBUG] LMEngine: set session_config OK")
+
+        // PhoneClaw only calls set_system_message when there's actual content
+        // Omit when nil to avoid potential API issues
+
+        // PhoneClaw only calls set_tools when there's actual content
+        // Use withCString like PhoneClaw does
+        if let toolsJSON = toolsJSON {
+            toolsJSON.withCString { litert_lm_conversation_config_set_tools(convConfig, $0) }
+        }
+        NSLog("[DEBUG] LMEngine: set tools OK")
+
+        // Try with NULL config first (uses defaults) – works on this LiteRTLM version
+        guard let cConversation = litert_lm_conversation_create(engine, nil) else {
+            NSLog("[DEBUG] LMEngine: createConversation FAILED - litert_lm_conversation_create(NULL) returned NULL")
+            litert_lm_conversation_config_delete(convConfig)
+            throw LiteRTLMError.conversationCreationFailed
+        }
+        litert_lm_conversation_config_delete(convConfig)
+        litert_lm_session_config_delete(sessionConfig)
+        NSLog("[DEBUG] LMEngine: createConversation SUCCESS (NULL config)")
+
+        // Note: Custom config params (maxOutputTokens, sampler, systemPrompt, tools)
+        // are not applied because this LiteRTLM version only accepts NULL config.
+        // The C API's builder-style config setters seem to be broken.
+        // Future: Upgrade LiteRTLM or switch to Session API for custom params.
+
+        return LMConversation(engine: self, cConversation: cConversation, configuration: configuration)
     }
 }

@@ -43,11 +43,11 @@ public struct SamplerConfiguration: Sendable {
 
     /// Convert to the C struct.
     func toCParams() -> LiteRtLmSamplerParams {
-        let cType: Type
+        let cType: LiteRtLmSamplerType
         switch samplerType {
-        case .topK: cType = kTopK
-        case .topP: cType = kTopP
-        case .greedy: cType = kGreedy
+        case .topK: cType = kLiteRtLmSamplerTypeTopK
+        case .topP: cType = kLiteRtLmSamplerTypeTopP
+        case .greedy: cType = kLiteRtLmSamplerTypeGreedy
         }
         return LiteRtLmSamplerParams(
             type: cType,

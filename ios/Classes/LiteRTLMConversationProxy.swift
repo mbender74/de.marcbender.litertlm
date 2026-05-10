@@ -39,29 +39,30 @@ public class LiteRTLMConversationProxy: TiProxy {
 
   @objc
   public func send(_ text: String) {
-    let task = Task {
-      do {
-        guard let conversation = _conversation else { throw LiteRTLMError.noActiveConversation }
-        _isActive = true
-        let result = try await conversation.send(text)
-        await MainActor.run {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      Task {
+        do {
+          guard let conversation = self._conversation else {
+            self.fireEvent("error", with: ["message": "No active conversation"])
+            return
+          }
+          self._isActive = true
+          let result = try await conversation.send(text)
+          self._isActive = false
           let msg = LiteRTLMMessage()
           msg._role = "model"
           let content = LiteRTLMContent()
           content._text = result
           msg._contents = [content]
-          _history.append(msg)
-          fireEvent("message", with: ["role": "model", "content": result])
-        }
-        _isActive = false
-      } catch {
-        await MainActor.run {
-          _isActive = false
-          fireEvent("error", with: ["message": error.localizedDescription])
+          self._history.append(msg)
+          self.fireEvent("message", with: ["role": "model", "content": result])
+        } catch {
+          self._isActive = false
+          self.fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
-    _ = task
   }
 
   @objc
@@ -93,29 +94,30 @@ public class LiteRTLMConversationProxy: TiProxy {
       }
     }
 
-    let task = Task {
-      do {
-        guard let conversation = _conversation else { throw LiteRTLMError.noActiveConversation }
-        _isActive = true
-        let result = try await conversation.send(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
-        await MainActor.run {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      Task {
+        do {
+          guard let conversation = self._conversation else {
+            self.fireEvent("error", with: ["message": "No active conversation"])
+            return
+          }
+          self._isActive = true
+          let result = try await conversation.send(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
+          self._isActive = false
           let msg = LiteRTLMMessage()
           msg._role = "model"
           let content = LiteRTLMContent()
           content._text = result
           msg._contents = [content]
-          _history.append(msg)
-          fireEvent("message", with: ["role": "model", "content": result])
-        }
-        _isActive = false
-      } catch {
-        await MainActor.run {
-          _isActive = false
-          fireEvent("error", with: ["message": error.localizedDescription])
+          self._history.append(msg)
+          self.fireEvent("message", with: ["role": "model", "content": result])
+        } catch {
+          self._isActive = false
+          self.fireEvent("error", with: ["message": error.localizedDescription])
         }
       }
     }
-    _ = task
   }
 
   @objc
@@ -150,109 +152,56 @@ public class LiteRTLMConversationProxy: TiProxy {
       }
     }
 
-    guard let conversation = _conversation else {
-      fireEvent("error", with: ["message": "No active conversation"])
-      return
-    }
+   DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      guard let conversation = self._conversation else {
+        self.fireEvent("error", with: ["message": "No active conversation"])
+        return
+      }
 
-    _isActive = true
-    do {
-      let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
+      self._isActive = true
       Task {
         do {
+          let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
           for try await token in stream {
             await MainActor.run {
-              fireEvent("tokencode", with: ["token": token])
+              self.fireEvent("tokencode", with: ["token": token])
             }
           }
           await MainActor.run {
-            _isActive = false
+            self._isActive = false
             let msg = LiteRTLMMessage()
             msg._role = "model"
-            _history.append(msg)
-            fireEvent("end", with: [:])
+            self._history.append(msg)
+            self.fireEvent("end", with: [:])
           }
         } catch {
           await MainActor.run {
-            _isActive = false
-            fireEvent("error", with: ["message": error.localizedDescription])
-          }
-        }
-      }
-    } catch {
-      _isActive = false
-      fireEvent("error", with: ["message": error.localizedDescription])
-    }
-  }
-
-  @objc
-  public func collectStream(_ text: String, images: [[String: Any]]?, audio: [[String: Any]]?, audioFormat: String) {
-    var imageData: [Data] = []
-    if let images = images {
-      for img in images {
-        if let data = img["data"] as? Data {
-          let maxDim = img["maxDimension"] as? Int ?? 1024
-          do {
-            let processed = try ImageUtilities.prepareForVision(data, maxDimension: maxDim)
-            imageData.append(processed)
-          } catch {
-            // skip
+            self._isActive = false
+            self.fireEvent("error", with: ["message": error.localizedDescription])
           }
         }
       }
     }
-
-    var audioData: [Data] = []
-    var audioFormatVal: AudioFormat = .wav
-    if let audio = audio {
-      for aud in audio {
-        if let data = aud["data"] as? Data {
-          switch audioFormat {
-          case "flac": audioFormatVal = .flac
-          case "mp3": audioFormatVal = .mp3
-          default: audioFormatVal = .wav
-          }
-          audioData.append(data)
-        }
-      }
-    }
-
-    let task = Task {
-      do {
-        guard let conversation = _conversation else { throw LiteRTLMError.noActiveConversation }
-        let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
-        let result = try await stream.collect()
-        await MainActor.run {
-          let msg = LiteRTLMMessage()
-          msg._role = "model"
-          let content = LiteRTLMContent()
-          content._text = result
-          msg._contents = [content]
-          _history.append(msg)
-          fireEvent("message", with: ["role": "model", "content": result])
-        }
-      } catch {
-        await MainActor.run {
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
-      }
-    }
-    _ = task
   }
 
   @objc
   public func cancel() {
-    _conversation?.cancel()
-    _isActive = false
-    fireEvent("cancelled", with: [:])
+    DispatchQueue.main.async { [weak self] in
+      self?._conversation?.cancel()
+      self?._isActive = false
+      self?.fireEvent("cancelled", with: [:])
+    }
   }
 
   @objc
   public func close() {
-    _conversation?.close()
-    _isActive = false
-    _history = []
-    fireEvent("close", with: [:])
+    DispatchQueue.main.async { [weak self] in
+      self?._conversation?.close()
+      self?._isActive = false
+      self?._history = []
+      self?.fireEvent("close", with: [:])
+    }
   }
 
   public func getBenchmarkInfo() -> [String: Any]? {

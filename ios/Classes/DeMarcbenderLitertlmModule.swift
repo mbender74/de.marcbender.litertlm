@@ -154,27 +154,25 @@ class DeMarcbenderLitertlmModule: TiModule {
 
       // Auto-load the engine before firing enginecreated event
       NSLog("[DEBUG] createEngineWithConfig: loading engine...")
-      Task {
-        do {
-          try await engine.load()
-          proxy._status = "ready"
-          proxy._isReady = true
-          NSLog("[DEBUG] createEngineWithConfig: engine loaded successfully")
+      do {
+        try engine.load()
+        proxy._status = "ready"
+        proxy._isReady = true
+        NSLog("[DEBUG] createEngineWithConfig: engine loaded successfully")
 
-          // Fire event on main thread
-          await MainActor.run {
-            NSLog("[DEBUG] About to fire enginecreated event (config)")
-            fireEvent("enginecreated", with: ["engine": proxy])
-            NSLog("[DEBUG] enginecreated event fired (config)")
-          }
-        } catch {
-          proxy._status = "error"
-          proxy._lastError = error.localizedDescription
-          NSLog("[DEBUG] createEngineWithConfig: engine load FAILED - \(error.localizedDescription)")
+        // Fire event on main thread
+        DispatchQueue.main.async {
+          NSLog("[DEBUG] About to fire enginecreated event (config)")
+          self.fireEvent("enginecreated", with: ["engine": proxy])
+          NSLog("[DEBUG] enginecreated event fired (config)")
+        }
+      } catch {
+        proxy._status = "error"
+        proxy._lastError = error.localizedDescription
+        NSLog("[DEBUG] createEngineWithConfig: engine load FAILED - \(error.localizedDescription)")
 
-          await MainActor.run {
-            fireEvent("engineerror", with: ["message": error.localizedDescription])
-          }
+        DispatchQueue.main.async {
+          self.fireEvent("engineerror", with: ["message": error.localizedDescription])
         }
       }
     } catch {

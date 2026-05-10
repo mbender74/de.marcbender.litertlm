@@ -49,141 +49,270 @@ public class LiteRTLMEngineProxy: TiProxy {
 
   @objc
   public func load() {
-    Task {
+    DispatchQueue.main.async {
       do {
-        guard let engine = _engine else {
-          await MainActor.run {
-            _status = "error"
-            _lastError = "Engine not initialized"
-            fireEvent("error", with: ["message": "Engine not initialized"])
-          }
+        guard let engine = self._engine else {
+          self._status = "error"
+          self._lastError = "Engine not initialized"
+          self.fireEvent("error", with: ["message": "Engine not initialized"])
           return
         }
-        _status = "loading"
-        isReady = false
-        fireEvent("statuschange", with: ["status": "loading"])
-        try await engine.load()
-        await MainActor.run {
-          _status = "ready"
-          _isReady = true
-          fireEvent("statuschange", with: ["status": "ready"])
-          fireEvent("ready", with: [:])
-        }
+        self._status = "loading"
+        self.isReady = false
+        self.fireEvent("statuschange", with: ["status": "loading"])
+        try engine.load()
+        self._status = "ready"
+        self.isReady = true
+        self.fireEvent("statuschange", with: ["status": "ready"])
+        self.fireEvent("ready", with: [:])
       } catch {
-        await MainActor.run {
-          _status = "error"
-          _isReady = false
-          _lastError = error.localizedDescription
-          fireEvent("error", with: ["message": error.localizedDescription, "error": error])
-        }
+        self._status = "error"
+        self._isReady = false
+        self._lastError = error.localizedDescription
+        self.fireEvent("error", with: ["message": error.localizedDescription, "error": error])
       }
     }
   }
 
   @objc
   public func unload() {
-    Task {
-      guard let engine = _engine else { return }
-      // LMEngine is an actor; unload() accesses actor-isolated `status`, so we
-      // must call it with `await`.
-      await engine.unload()
-      await MainActor.run {
-        _status = "notLoaded"
-        _isReady = false
-        fireEvent("statuschange", with: ["status": "notLoaded"])
-      }
+    DispatchQueue.main.async {
+      guard let engine = self._engine else { return }
+      engine.unload()
+      self._status = "notLoaded"
+      self._isReady = false
+      self.fireEvent("statuschange", with: ["status": "notLoaded"])
     }
   }
 
   @objc
   public func createSession(_ configuration: LiteRTLMSessionConfiguration?) {
-    Task {
+    DispatchQueue.main.async {
       do {
-        guard let engine = _engine, await engine.isReady else {
-          await MainActor.run {
-            _status = "error"
-            _lastError = "Engine is not ready or not initialized"
-            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
-          }
+        guard let engine = self._engine, engine.isReady else {
+          self._status = "error"
+          self._lastError = "Engine is not ready or not initialized"
+          self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           return
         }
         let sessionConfig: SessionConfiguration = configuration?.toNative() ?? SessionConfiguration()
-        let session = try await engine.createSession(configuration: sessionConfig)
+        let session = try engine.createSession(configuration: sessionConfig)
         let proxy = LiteRTLMSessionProxy()
         proxy._session = session
         proxy._engineProxy = self
         proxy._configuration = configuration
-        replaceValue(proxy, forKey: "session", notification: false)
-        fireEvent("sessioncreated", with: ["session": proxy])
+        self.replaceValue(proxy, forKey: "session", notification: false)
+        self.fireEvent("sessioncreated", with: ["session": proxy])
       } catch {
-        await MainActor.run {
-          _status = "error"
-          _lastError = error.localizedDescription
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
+        self._status = "error"
+        self._lastError = error.localizedDescription
+        self.fireEvent("error", with: ["message": error.localizedDescription])
       }
     }
   }
 
   @objc
   public func createConversation(_ configuration: LiteRTLMConversationConfiguration?) {
-    Task {
+    DispatchQueue.main.async {
       do {
-        guard let engine = _engine, await engine.isReady else {
-          await MainActor.run {
-            _status = "error"
-            _lastError = "Engine is not ready or not initialized"
-            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
-          }
+        guard let engine = self._engine, engine.isReady else {
+          self._status = "error"
+          self._lastError = "Engine is not ready or not initialized"
+          self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           return
         }
         let convConfig: ConversationConfiguration = configuration?.toNative() ?? ConversationConfiguration()
-        let conversation = try await engine.createConversation(configuration: convConfig)
+        let conversation = try engine.createConversation(configuration: convConfig)
         let proxy = LiteRTLMConversationProxy()
         proxy._conversation = conversation
         proxy._engineProxy = self
         proxy._configuration = configuration
-        replaceValue(proxy, forKey: "conversation", notification: false)
-        fireEvent("conversationcreated", with: ["conversation": proxy])
+        self.replaceValue(proxy, forKey: "conversation", notification: false)
+        self.fireEvent("conversationcreated", with: ["conversation": proxy])
       } catch {
-        await MainActor.run {
-          _status = "error"
-          _lastError = error.localizedDescription
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
+        self._status = "error"
+        self._lastError = error.localizedDescription
+        self.fireEvent("error", with: ["message": error.localizedDescription])
       }
     }
   }
 
   @objc
-  public func createConversationWithConfig(_ configuration: LiteRTLMConversationConfiguration) {
-    NSLog("[DEBUG] LiteRTLMEngineProxy: createConversationWithConfig called")
-    Task {
-      do {
-        guard let engine = _engine, await engine.isReady else {
-          await MainActor.run {
-            _status = "error"
-            _lastError = "Engine is not ready or not initialized"
-            fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
+  public func createConversationWithConfig(_ configuration: Any) {
+    NSLog("[DEBUG] createConversationWithConfig CALLED, type=\(type(of: configuration))")
+
+    // Titanium wraps TiProxy in __NSArrayM - extract the proxy
+    let config: LiteRTLMConversationConfiguration
+    if let arr = configuration as? [Any], let c = arr.first as? LiteRTLMConversationConfiguration {
+      config = c
+      NSLog("[DEBUG] createConversationWithConfig: proxy extracted from array")
+    } else if let c = configuration as? LiteRTLMConversationConfiguration {
+      config = c
+      NSLog("[DEBUG] createConversationWithConfig: proxy extracted directly")
+    } else {
+      // Fallback: use KVC on NSObject
+      NSLog("[DEBUG] createConversationWithConfig: direct cast failed, trying KVC")
+      guard let obj = configuration as? NSObject else {
+        NSLog("[DEBUG] createConversationWithConfig: cannot cast to NSObject")
+        return
+      }
+      let maxOutputTokens = obj.value(forKey: "maxOutputTokens") as? Int32 ?? 2048
+      let samplerType = obj.value(forKey: "samplerType") as? String ?? "balanced"
+      let toolExecutionMode = obj.value(forKey: "toolExecutionMode") as? String ?? "automatic"
+      let maxImageDimension = obj.value(forKey: "maxImageDimension") as? Int ?? 1024
+      let systemPrompt = obj.value(forKey: "systemPrompt") as? String
+      let toolsArr = obj.value(forKey: "tools") as? [Any] ?? []
+
+      var nativeTools: [Tool] = []
+      for toolObj in toolsArr {
+        guard let tObj = toolObj as? NSObject else { continue }
+        let toolName = tObj.value(forKey: "name") as? String ?? ""
+        let toolDesc = tObj.value(forKey: "description") as? String ?? ""
+        var toolParams: [Tool.Parameter] = []
+        if let paramsArr = tObj.value(forKey: "parameters") as? [Any] {
+          for p in paramsArr {
+            guard let pObj = p as? NSObject else { continue }
+            toolParams.append(Tool.Parameter(
+              name: pObj.value(forKey: "name") as? String ?? "",
+              type: Tool.ParameterType(rawValue: pObj.value(forKey: "type") as? String ?? "string") ?? .string,
+              description: pObj.value(forKey: "description") as? String ?? "",
+              required: pObj.value(forKey: "required") as? Bool ?? false
+            ))
           }
+        }
+        nativeTools.append(Tool(name: toolName, description: toolDesc, parameters: toolParams, execute: { _ in return [:] }))
+      }
+      NSLog("[DEBUG] createConversationWithConfig: values copied via KVC (toolsCount=\(nativeTools.count))")
+
+      // Build config and create conversation
+      DispatchQueue.main.async { [weak self] in
+        guard let self = self, let engine = self._engine, engine.isReady else { return }
+        do {
+          var convConfig = ConversationConfiguration()
+          convConfig = convConfig.maxOutputTokens(maxOutputTokens)
+          convConfig = convConfig.maxImageDimension(maxImageDimension)
+          if samplerType == "greedy" { convConfig = convConfig.sampler(.greedy) }
+          else if samplerType == "creative" { convConfig = convConfig.sampler(.creative) }
+          else { convConfig = convConfig.sampler(.balanced) }
+          if toolExecutionMode == "manual" { convConfig = convConfig.toolExecution(.manual) }
+          else { convConfig = convConfig.toolExecution(.automatic) }
+          if let prompt = systemPrompt { convConfig = convConfig.systemPrompt(prompt) }
+          if !nativeTools.isEmpty { convConfig = convConfig.tools(nativeTools) }
+
+          let conversation = try engine.createConversation(configuration: convConfig)
+          let proxy = LiteRTLMConversationProxy()
+          proxy._conversation = conversation
+          proxy._engineProxy = self
+          self.fireEvent("conversationcreated", with: ["conversation": proxy])
+          NSLog("[DEBUG] createConversationWithConfig: conversationcreated FIRED (KVC path)")
+        } catch {
+          self._status = "error"
+          self._lastError = error.localizedDescription
+          self.fireEvent("error", with: ["message": error.localizedDescription])
+        }
+      }
+      return
+    }
+
+    // CRITICAL: Copy all values IMMEDIATELY before any async dispatch.
+    let maxOutputTokens = config.maxOutputTokens
+    let samplerType = config.samplerType
+    let toolExecutionMode = config.toolExecutionMode
+    let maxImageDimension = config.maxImageDimension
+    let systemPrompt = config.systemPrompt
+
+    // Copy tools immediately (each tool is a TiProxy, extract scalars)
+    var nativeTools: [Tool] = []
+    for tool in config.tools {
+      guard let t = tool as? LiteRTLMTool else { continue }
+      let toolName = t.name
+      let toolDesc = t.description
+      var toolParams: [Tool.Parameter] = []
+      for param in t.parameters {
+        if let dict = param as? [String: Any] {
+          toolParams.append(Tool.Parameter(
+            name: dict["name"] as? String ?? "",
+            type: Tool.ParameterType(rawValue: dict["type"] as? String ?? "string") ?? .string,
+            description: dict["description"] as? String ?? "",
+            required: dict["required"] as? Bool ?? false
+          ))
+        }
+      }
+      nativeTools.append(Tool(
+        name: toolName,
+        description: toolDesc,
+        parameters: toolParams,
+        execute: { _ in return [:] }
+      ))
+    }
+    NSLog("[DEBUG] createConversationWithConfig: values copied (toolsCount=\(nativeTools.count))")
+
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else {
+        NSLog("[DEBUG] createConversationWithConfig - self is nil")
+        return
+      }
+      NSLog("[DEBUG] createConversationWithConfig - self exists, building config")
+      do {
+        guard let engine = self._engine else {
+          NSLog("[DEBUG] createConversationWithConfig - _engine is nil")
+          self._status = "error"
+          self._lastError = "Engine is not ready or not initialized"
+          self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
           return
         }
-        let convConfig: ConversationConfiguration = configuration.toNative()
-        let conversation = try await engine.createConversation(configuration: convConfig)
+        NSLog("[DEBUG] createConversationWithConfig - engine exists")
+        guard engine.isReady else {
+          NSLog("[DEBUG] createConversationWithConfig - engine not ready")
+          self._status = "error"
+          self._lastError = "Engine is not ready or not initialized"
+          self.fireEvent("error", with: ["message": "Engine is not ready or not initialized"])
+          return
+        }
+        NSLog("[DEBUG] createConversationWithConfig - engine isReady, building ConversationConfiguration")
+
+        // Build the native config from the copied values (no JS pointer deref)
+        var convConfig = ConversationConfiguration()
+        convConfig = convConfig.maxOutputTokens(maxOutputTokens)
+        convConfig = convConfig.maxImageDimension(maxImageDimension)
+
+        if samplerType == "greedy" {
+          convConfig = convConfig.sampler(.greedy)
+        } else if samplerType == "creative" {
+          convConfig = convConfig.sampler(.creative)
+        } else {
+          convConfig = convConfig.sampler(.balanced)
+        }
+
+        if toolExecutionMode == "manual" {
+          convConfig = convConfig.toolExecution(.manual)
+        } else {
+          convConfig = convConfig.toolExecution(.automatic)
+        }
+
+        if let prompt = systemPrompt {
+          convConfig = convConfig.systemPrompt(prompt)
+        }
+
+        if !nativeTools.isEmpty {
+          convConfig = convConfig.tools(nativeTools)
+        }
+
+        NSLog("[DEBUG] createConversationWithConfig: calling engine.createConversation()")
+        let conversation = try engine.createConversation(configuration: convConfig)
+        NSLog("[DEBUG] createConversationWithConfig: createConversation() done")
+
         let proxy = LiteRTLMConversationProxy()
         proxy._conversation = conversation
         proxy._engineProxy = self
-        proxy._configuration = configuration
-        replaceValue(proxy, forKey: "conversation", notification: false)
-        fireEvent("conversationcreated", with: ["conversation": proxy])
-        NSLog("[DEBUG] LiteRTLMEngineProxy: conversationcreated event fired")
+        NSLog("[DEBUG] createConversationWithConfig: about to fire conversationcreated")
+        self.fireEvent("conversationcreated", with: ["conversation": proxy])
+        NSLog("[DEBUG] createConversationWithConfig: conversationcreated event FIRED")
       } catch {
-        await MainActor.run {
-          _status = "error"
-          _lastError = error.localizedDescription
-          fireEvent("error", with: ["message": error.localizedDescription])
-        }
-        NSLog("[DEBUG] LiteRTLMEngineProxy: createConversationWithConfig error - \(error.localizedDescription)")
+        self._status = "error"
+        self._lastError = error.localizedDescription
+        NSLog("[DEBUG] createConversationWithConfig ERROR - \(error.localizedDescription)")
+        self.fireEvent("error", with: ["message": error.localizedDescription])
       }
     }
   }
