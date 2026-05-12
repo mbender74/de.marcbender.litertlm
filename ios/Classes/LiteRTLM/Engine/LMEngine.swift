@@ -2,6 +2,20 @@ import CLiteRTLM
 import UIKit
 import TitaniumKit
 
+// The new xcframework has a 0-arg litert_lm_conversation_config_create() + setters,
+// but litert_lm_conversation_create rejects configs created that way.
+// The binary still contains the original 6-arg entry point under the same symbol.
+// We declare it with a different Swift name to call the 6-arg version directly.
+@_silgen_name("litert_lm_conversation_config_create")
+private func litert_lm_conversation_config_create_6arg(
+    _ engine: OpaquePointer,
+    _ sessionConfig: OpaquePointer?,
+    _ systemMessage: UnsafePointer<CChar>?,
+    _ toolsJSON: UnsafePointer<CChar>?,
+    _ messagesJSON: UnsafePointer<CChar>?,
+    _ enableConstrainedDecoding: Bool
+) -> OpaquePointer?
+
 /// The lifecycle state of the engine.
 public enum EngineStatus: Sendable {
     case notLoaded
@@ -138,8 +152,10 @@ public final class LMEngine: @unchecked Sendable {
 
     /// Create a conversation with the given configuration.
     ///
-    /// Uses the 6-argument `litert_lm_conversation_config_create(engine, sessionConfig, systemMessage, tools, messages, constrainedDecoding)`.
-    /// System prompt is passed as nil (Gemma 4 chat template has no system role – handled via pendingSystemPrompt).
+    /// Uses the 6-arg `litert_lm_conversation_config_create` via @_silgen_name
+    /// because the new xcframework's builder pattern (create() + setters) produces
+    /// configs that litert_lm_conversation_create rejects. The original 6-arg entry
+    /// point still exists in the binary under the same symbol name.
     public func createConversation(configuration: ConversationConfiguration) throws -> LMConversation {
         guard let engine = cEngine else {
             throw LiteRTLMError.engineNotReady
@@ -159,34 +175,23 @@ public final class LMEngine: @unchecked Sendable {
         // Step 2: Build tools JSON if any
         let toolsJSON: String? = configuration.tools.isEmpty ? nil : {
             let schemas = configuration.tools.map { $0.toJSONSchema() }
-            NSLog("[LMEngine] 🔧 Tools JSON schemas: \(schemas)")
             if let data = try? JSONSerialization.data(withJSONObject: schemas),
                let str = String(data: data, encoding: .utf8) {
-                NSLog("[LMEngine] 🔧 Tools JSON string (\(str.count) chars): \(str.prefix(500))")
                 return str
             }
-            NSLog("[LMEngine] ⚠️ Failed to serialize tools JSON")
             return nil
         }()
-        NSLog("[LMEngine] 🔧 enable_constrained_decoding=\(!configuration.tools.isEmpty), toolsJSON=\(toolsJSON != nil ? "present" : "nil")")
 
-        // Step 3: Create conversation config using builder pattern
-        guard let convConfig = litert_lm_conversation_config_create() else {
+        // Step 3: Create conversation config using 6-arg constructor
+        let cSystemMessage: UnsafePointer<CChar>? = nil
+        let cToolsJSON = toolsJSON?.withCString { $0 }
+        let cMessagesJSON: UnsafePointer<CChar>? = nil
+        let enableConstrainedDecoding = !configuration.tools.isEmpty
+
+        guard let convConfig = litert_lm_conversation_config_create_6arg(
+            engine, sessionConfig, cSystemMessage, cToolsJSON, cMessagesJSON, enableConstrainedDecoding
+        ) else {
             throw LiteRTLMError.conversationCreationFailed
-        }
-
-        litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
-
-        if let systemPrompt = configuration.systemPrompt {
-            litert_lm_conversation_config_set_system_message(convConfig, (systemPrompt as NSString).utf8String!)
-        }
-
-        if let toolsJSON {
-            litert_lm_conversation_config_set_tools(convConfig, (toolsJSON as NSString).utf8String!)
-        }
-
-        if !configuration.tools.isEmpty {
-            litert_lm_conversation_config_set_enable_constrained_decoding(convConfig, true)
         }
 
         // Step 4: Create the conversation
