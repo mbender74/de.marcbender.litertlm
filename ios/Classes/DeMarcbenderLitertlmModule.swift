@@ -353,7 +353,11 @@ class DeMarcbenderLitertlmModule: TiModule {
     if let parameters = params["parameters"] as? [Any] {
       proxy._parameters = parameters
     }
-    replaceValue(proxy, forKey: "tool", notification: false)
+    // executeCallback is set by JS AFTER createToolProxy returns (tool.executeCallback = ...)
+    // so we don't extract it here – the @objc setter handles it.
+    // Unique key per tool to avoid replaceValue collisions
+    let key = "tool_\(proxy._name)"
+    replaceValue(proxy, forKey: key, notification: false)
     return proxy
   }
 

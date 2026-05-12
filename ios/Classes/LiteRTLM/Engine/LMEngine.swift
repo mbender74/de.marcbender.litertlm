@@ -138,14 +138,14 @@ public final class LMEngine: @unchecked Sendable {
 
     /// Create a conversation with the given configuration.
     ///
-    /// Note: This LiteRTLM version only accepts NULL config for conversation creation.
-    /// Custom parameters (maxOutputTokens, sampler, systemPrompt, tools) are not applied
-    /// because the C API's builder-style config setters are broken in this version.
+    /// Uses the 6-argument `litert_lm_conversation_config_create(engine, sessionConfig, systemMessage, tools, messages, constrainedDecoding)`.
+    /// System prompt is passed as nil (Gemma 4 chat template has no system role – handled via pendingSystemPrompt).
     public func createConversation(configuration: ConversationConfiguration) throws -> LMConversation {
         guard let engine = cEngine else {
             throw LiteRTLMError.engineNotReady
         }
 
+        // Step 1: Create session config
         guard let sessionConfig = litert_lm_session_config_create() else {
             throw LiteRTLMError.conversationCreationFailed
         }
@@ -156,38 +156,42 @@ public final class LMEngine: @unchecked Sendable {
         var samplerParams = configuration.sampler.toCParams()
         litert_lm_session_config_set_sampler_params(sessionConfig, &samplerParams)
 
-        // Build tools JSON if any
+        // Step 2: Build tools JSON if any
         let toolsJSON: String? = configuration.tools.isEmpty ? nil : {
             let schemas = configuration.tools.map { $0.toJSONSchema() }
+            NSLog("[LMEngine] 🔧 Tools JSON schemas: \(schemas)")
             if let data = try? JSONSerialization.data(withJSONObject: schemas),
                let str = String(data: data, encoding: .utf8) {
+                NSLog("[LMEngine] 🔧 Tools JSON string (\(str.count) chars): \(str.prefix(500))")
                 return str
             }
+            NSLog("[LMEngine] ⚠️ Failed to serialize tools JSON")
             return nil
         }()
+        NSLog("[LMEngine] 🔧 enable_constrained_decoding=\(!configuration.tools.isEmpty), toolsJSON=\(toolsJSON != nil ? "present" : "nil")")
 
-        // New API: create empty config, then set properties via setters
-        guard let convConfig = litert_lm_conversation_config_create() else {
+        // Step 3: Call 6-arg conversation config create
+        // system_message_json: nil (Gemma 4 has no system role, C runtime drops it)
+        // messages_json: nil (no pre-loaded messages)
+        // enable_constrained_decoding: true when tools are present
+        guard let convConfig = litert_lm_conversation_config_create(
+            engine,
+            sessionConfig,
+            nil,          // system_message_json
+            toolsJSON,    // tools_json (nil if no tools)
+            nil,          // messages_json
+            !configuration.tools.isEmpty  // enable_constrained_decoding
+        ) else {
             throw LiteRTLMError.conversationCreationFailed
         }
 
-        // Set session config
-        litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
-
-        // PhoneClaw only calls set_tools when there's actual content
-        // Use withCString like PhoneClaw does
-        if let toolsJSON = toolsJSON {
-            toolsJSON.withCString { litert_lm_conversation_config_set_tools(convConfig, $0) }
-        }
-
-        // Try with NULL config first (uses defaults) – works on this LiteRTLM version
-        guard let cConversation = litert_lm_conversation_create(engine, nil) else {
+        // Step 4: Create the conversation
+        guard let cConversation = litert_lm_conversation_create(engine, convConfig) else {
             litert_lm_conversation_config_delete(convConfig)
             throw LiteRTLMError.conversationCreationFailed
         }
-        litert_lm_conversation_config_delete(convConfig)
-        // Note: sessionConfig is deleted by defer, don't double-free!
 
+        litert_lm_conversation_config_delete(convConfig)
         return LMConversation(engine: self, cConversation: cConversation, configuration: configuration)
     }
 }

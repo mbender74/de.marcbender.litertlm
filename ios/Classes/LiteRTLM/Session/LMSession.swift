@@ -48,8 +48,8 @@ public final class LMSession: @unchecked Sendable {
 
         let formatted = template.formatSingle(prompt)
 
-        var input = LiteRtLmInputData(
-            type: kLiteRtLmInputDataTypeText,
+        var input = InputData(
+            type: kInputText,
             data: UnsafeRawPointer((formatted as NSString).utf8String!),
             size: strlen((formatted as NSString).utf8String!)
         )
@@ -100,8 +100,8 @@ public final class LMSession: @unchecked Sendable {
                     .finish(throwing: LiteRTLMError.invalidInput(detail: "Failed to encode prompt as UTF-8"))
                 return
             }
-            var input = LiteRtLmInputData(
-                type: kLiteRtLmInputDataTypeText,
+            var input = InputData(
+                type: kInputText,
                 data: UnsafeRawPointer(cStr),
                 size: strlen(cStr)
             )
@@ -162,7 +162,7 @@ public final class LMSession: @unchecked Sendable {
 
         let formatted = template.formatSingle(text)
 
-        var inputs: [LiteRtLmInputData] = []
+        var inputs: [InputData] = []
         var pinnedData: [NSData] = []
 
         // Add images
@@ -170,21 +170,21 @@ public final class LMSession: @unchecked Sendable {
             let prepared = (try? ImageUtilities.prepareForVision(imageData, maxDimension: 1024)) ?? imageData
             let nsData = prepared as NSData
             pinnedData.append(nsData)
-            inputs.append(LiteRtLmInputData(type: kLiteRtLmInputDataTypeImage, data: nsData.bytes, size: nsData.length))
-            inputs.append(LiteRtLmInputData(type: kLiteRtLmInputDataTypeImageEnd, data: nil, size: 0))
+            inputs.append(InputData(type: kInputImage, data: nsData.bytes, size: nsData.length))
+            inputs.append(InputData(type: kInputImageEnd, data: nil, size: 0))
         }
 
         // Add audio
         for audioData in audio {
             let nsData = audioData as NSData
             pinnedData.append(nsData)
-            inputs.append(LiteRtLmInputData(type: kLiteRtLmInputDataTypeAudio, data: nsData.bytes, size: nsData.length))
-            inputs.append(LiteRtLmInputData(type: kLiteRtLmInputDataTypeAudioEnd, data: nil, size: 0))
+            inputs.append(InputData(type: kInputAudio, data: nsData.bytes, size: nsData.length))
+            inputs.append(InputData(type: kInputAudioEnd, data: nil, size: 0))
         }
 
         // Add text
         let cText = (formatted as NSString).utf8String!
-        inputs.append(LiteRtLmInputData(type: kLiteRtLmInputDataTypeText, data: UnsafeRawPointer(cText), size: strlen(cText)))
+        inputs.append(InputData(type: kInputText, data: UnsafeRawPointer(cText), size: strlen(cText)))
 
         guard let responses = litert_lm_session_generate_content(
             session, &inputs, inputs.count

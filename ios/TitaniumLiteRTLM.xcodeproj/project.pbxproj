@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2C0F2EDF2FACC28C008C0235 /* LiteRTLM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C0F2EDE2FACC28C008C0235 /* LiteRTLM.xcframework */; };
 		2C0F2F092FACC2CC008C0235 /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2EFD2FACC2CC008C0235 /* ModelInfo.swift */; };
 		2C0F2F0A2FACC2CC008C0235 /* LMSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2EEC2FACC2CC008C0235 /* LMSession.swift */; };
 		2C0F2F0B2FACC2CC008C0235 /* LMConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2EE52FACC2CC008C0235 /* LMConversation.swift */; };
@@ -38,6 +37,7 @@
 		2C0F2F242FACC2CC008C0235 /* DownloadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2EFB2FACC2CC008C0235 /* DownloadState.swift */; };
 		2C0F2F252FACC2CC008C0235 /* LiteRTLMModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2F032FACC2CC008C0235 /* LiteRTLMModelInfo.swift */; };
 		2C0F2F262FACC2CC008C0235 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0F2EF12FACC2CC008C0235 /* Tool.swift */; };
+		2C6258E12FAF1AFE000C4FBB /* LiteRTLM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C6258E02FAF1AFE000C4FBB /* LiteRTLM.xcframework */; };
 		B1E00E65241D179500C384C1 /* TitaniumKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B1E00E64241D179500C384C1 /* TitaniumKit.xcframework */; };
 		DB34CDE0207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.m in Sources */ = {isa = PBXBuildFile; fileRef = DB34CDDE207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.m */; };
 		DB34CDE1207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.h in Headers */ = {isa = PBXBuildFile; fileRef = DB34CDDF207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -48,7 +48,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2C0F2EDE2FACC28C008C0235 /* LiteRTLM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = LiteRTLM.xcframework; path = platform/LiteRTLM.xcframework; sourceTree = "<group>"; };
 		2C0F2EE02FACC2CC008C0235 /* BenchmarkInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkInfo.swift; sourceTree = "<group>"; };
 		2C0F2EE22FACC2CC008C0235 /* Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Content.swift; sourceTree = "<group>"; };
 		2C0F2EE42FACC2CC008C0235 /* ConversationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationConfiguration.swift; sourceTree = "<group>"; };
@@ -79,6 +78,7 @@
 		2C0F2F062FACC2CC008C0235 /* LiteRTLMSessionProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiteRTLMSessionProxy.swift; path = Classes/LiteRTLMSessionProxy.swift; sourceTree = "<group>"; };
 		2C0F2F072FACC2CC008C0235 /* LiteRTLMTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiteRTLMTool.swift; path = Classes/LiteRTLMTool.swift; sourceTree = "<group>"; };
 		2C0F2F082FACC2CC008C0235 /* LiteRTLMToolParameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiteRTLMToolParameter.swift; path = Classes/LiteRTLMToolParameter.swift; sourceTree = "<group>"; };
+		2C6258E02FAF1AFE000C4FBB /* LiteRTLM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = LiteRTLM.xcframework; path = platform/LiteRTLM.xcframework; sourceTree = "<group>"; };
 		B1E00E64241D179500C384C1 /* TitaniumKit.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = TitaniumKit.xcframework; path = "$(TITANIUM_SDK)/iphone/Frameworks/TitaniumKit.xcframework"; sourceTree = "<group>"; };
 		DB34CDDE207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DeMarcbenderLitertlmModuleAssets.m; path = Classes/DeMarcbenderLitertlmModuleAssets.m; sourceTree = SOURCE_ROOT; };
 		DB34CDDF207B998A005F8E8C /* DeMarcbenderLitertlmModuleAssets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DeMarcbenderLitertlmModuleAssets.h; path = Classes/DeMarcbenderLitertlmModuleAssets.h; sourceTree = SOURCE_ROOT; };
@@ -98,7 +98,7 @@
 			files = (
 				DB34CDE6207B9EBD005F8E8C /* Foundation.framework in Frameworks */,
 				B1E00E65241D179500C384C1 /* TitaniumKit.xcframework in Frameworks */,
-				2C0F2EDF2FACC28C008C0235 /* LiteRTLM.xcframework in Frameworks */,
+				2C6258E12FAF1AFE000C4FBB /* LiteRTLM.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,7 +249,7 @@
 		DB34CDE2207B9D6A005F8E8C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2C0F2EDE2FACC28C008C0235 /* LiteRTLM.xcframework */,
+				2C6258E02FAF1AFE000C4FBB /* LiteRTLM.xcframework */,
 				B1E00E64241D179500C384C1 /* TitaniumKit.xcframework */,
 				DB34CDE5207B9EBD005F8E8C /* Foundation.framework */,
 			);

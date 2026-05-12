@@ -18,6 +18,8 @@ public class LiteRTLMEngineProxy: TiProxy {
   internal var _isReady: Bool = false
   internal var _lastError: String?
   internal var _configuration: EngineConfiguration?
+  /// Strong refs to Tool proxies so their KrollCallbacks stay alive
+  internal var _toolProxies: [AnyObject] = []
 
   @objc public var status: String {
       get { return _status }
@@ -113,6 +115,11 @@ public class LiteRTLMEngineProxy: TiProxy {
 
   @objc
   public func createConversation(_ configuration: LiteRTLMConversationConfiguration?) {
+    // Retain tool proxies so KrollCallbacks stay alive
+    if let config = configuration {
+      self._toolProxies = config._tools.map { $0 as AnyObject }
+    }
+
     DispatchQueue.main.async {
       do {
         guard let engine = self._engine, engine.isReady else {
@@ -139,6 +146,7 @@ public class LiteRTLMEngineProxy: TiProxy {
 
   @objc
   public func createConversationWithConfig(_ configuration: Any) {
+    NSLog("[DEBUG] createConversationWithConfig CALLED, type=\(type(of: configuration))")
     // Titanium wraps TiProxy in __NSArrayM - extract the proxy
     let config: LiteRTLMConversationConfiguration
     if let arr = configuration as? [Any], let c = arr.first as? LiteRTLMConversationConfiguration {
@@ -221,6 +229,8 @@ public class LiteRTLMEngineProxy: TiProxy {
     let systemPrompt = config.systemPrompt
 
     // Copy tools immediately (each tool is a TiProxy, extract scalars)
+    // Preserve strong refs to proxies so the KrollCallback stays alive
+    var toolProxies: [AnyObject] = []
     var nativeTools: [Tool] = []
     for tool in config.tools {
       guard let t = tool as? LiteRTLMTool else { continue }
@@ -237,13 +247,60 @@ public class LiteRTLMEngineProxy: TiProxy {
           ))
         }
       }
+      // Keep strong ref to the proxy so KrollCallback doesn't die
+      toolProxies.append(t)
+
       nativeTools.append(Tool(
         name: toolName,
         description: toolDesc,
         parameters: toolParams,
-        execute: { _ in return [:] }
+        execute: { [weak t] args async throws -> [String: Any] in
+          guard let proxy = t, let callback = proxy._executeCallback else { return [:] }
+
+          let result: Any? = await withCheckedContinuation { continuation in
+            var resumed = false
+
+            DispatchQueue.main.async {
+              let resultCallback = proxy.makeResultCallback { (returned: Any?) in
+                if !resumed {
+                  resumed = true
+                  continuation.resume(returning: returned)
+                }
+              }
+
+              var callArgs: [Any] = [args]
+              if let rc = resultCallback {
+                callArgs.append(rc)
+              }
+              let returned = callback.call(callArgs, thisObject: proxy)
+
+              if !resumed {
+                if let dict = returned as? [String: Any] {
+                  resumed = true
+                  continuation.resume(returning: dict)
+                } else if let str = returned as? String {
+                  resumed = true
+                  continuation.resume(returning: ["output": str])
+                } else {
+                  resumed = true
+                  continuation.resume(returning: nil)
+                }
+              }
+            }
+          }
+
+          if let dict = result as? [String: Any] {
+            return dict
+          } else if let str = result as? String {
+            return ["output": str]
+          }
+          return [:]
+        }
       ))
     }
+
+    // Store tool proxies on self so they survive beyond this method
+    self._toolProxies = toolProxies
 
     DispatchQueue.main.async { [weak self] in
       guard let self = self else { return }
@@ -293,6 +350,7 @@ public class LiteRTLMEngineProxy: TiProxy {
         let proxy = LiteRTLMConversationProxy()
         proxy._conversation = conversation
         proxy._engineProxy = self
+        proxy._configuration = config
         self.replaceValue(proxy, forKey: "conversation", notification: false)
         // Fire on the module, not the engine proxy (JS listener is on litertlm module)
         if let module = DeMarcbenderLitertlmModule._moduleRef as? DeMarcbenderLitertlmModule {

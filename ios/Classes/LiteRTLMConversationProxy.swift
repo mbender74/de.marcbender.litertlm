@@ -197,24 +197,56 @@ public class LiteRTLMConversationProxy: TiProxy {
       self.fireEvent("streamstart", with: [:])
       NSLog("[DEBUG] sendStream: FIRED streamstart")
 
+      let hasTools = !(_configuration?._tools ?? []).isEmpty
+      NSLog("[DEBUG] sendStream: hasTools=\(hasTools), using \(hasTools ? "send()" : "sendStream()")")
+
       Task {
         do {
-          let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
-          for try await token in stream {
+          if hasTools {
+            // Tools active: use blocking send() which detects and executes tool calls
+            let response = try await conversation.send(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
             await MainActor.run {
-              NSLog("[DEBUG] sendStream: FIRED token, text='\(token)'")
-              self.fireEvent("token", with: ["token": token])
+              NSLog("[DEBUG] sendStream: send() returned \(response.count) chars, text='\(response.prefix(200))'")
+              self.fireEvent("token", with: ["token": response])
             }
-          }
-          await MainActor.run {
-            self._isActive = false
-            let msg = LiteRTLMMessage()
-            msg._role = "model"
-            self._history.append(msg)
-            self.fireEvent("streamcomplete", with: [:])
-            NSLog("[DEBUG] sendStream: FIRED streamcomplete")
-            self.fireEvent("streamend", with: [:])
-            NSLog("[DEBUG] sendStream: FIRED streamend")
+
+            await MainActor.run {
+              self._isActive = false
+              let msg = LiteRTLMMessage()
+              msg._role = "model"
+              let content = LiteRTLMContent()
+              content._text = response
+              msg._contents = [content]
+              self._history.append(msg)
+              self.fireEvent("streamcomplete", with: [:])
+              NSLog("[DEBUG] sendStream: FIRED streamcomplete")
+              self.fireEvent("streamend", with: [:])
+              NSLog("[DEBUG] sendStream: FIRED streamend")
+            }
+          } else {
+            // No tools: use streaming for fast token-by-token output
+            var streamedText = ""
+            let stream = try conversation.sendStream(text, images: imageData, audio: audioData, audioFormat: audioFormatVal)
+            for try await token in stream {
+              streamedText += token
+              await MainActor.run {
+                NSLog("[DEBUG] sendStream: FIRED token, text='\(token)'")
+                self.fireEvent("token", with: ["token": token])
+              }
+            }
+            await MainActor.run {
+              self._isActive = false
+              let msg = LiteRTLMMessage()
+              msg._role = "model"
+              let content = LiteRTLMContent()
+              content._text = streamedText
+              msg._contents = [content]
+              self._history.append(msg)
+              self.fireEvent("streamcomplete", with: [:])
+              NSLog("[DEBUG] sendStream: FIRED streamcomplete")
+              self.fireEvent("streamend", with: [:])
+              NSLog("[DEBUG] sendStream: FIRED streamend")
+            }
           }
         } catch {
           NSLog("[DEBUG] sendStream: ERROR \(error.localizedDescription)")
