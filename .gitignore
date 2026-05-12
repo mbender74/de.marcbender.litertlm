@@ -1,7 +1,7 @@
 # Build artifacts
 ios/build/
 ios/dist/
-ios/platform/
+ios/dist/
 
 # Test app build artifacts
 example/testApp/build/

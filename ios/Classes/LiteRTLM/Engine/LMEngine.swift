@@ -170,19 +170,23 @@ public final class LMEngine: @unchecked Sendable {
         }()
         NSLog("[LMEngine] 🔧 enable_constrained_decoding=\(!configuration.tools.isEmpty), toolsJSON=\(toolsJSON != nil ? "present" : "nil")")
 
-        // Step 3: Call 6-arg conversation config create
-        // system_message_json: nil (Gemma 4 has no system role, C runtime drops it)
-        // messages_json: nil (no pre-loaded messages)
-        // enable_constrained_decoding: true when tools are present
-        guard let convConfig = litert_lm_conversation_config_create(
-            engine,
-            sessionConfig,
-            nil,          // system_message_json
-            toolsJSON,    // tools_json (nil if no tools)
-            nil,          // messages_json
-            !configuration.tools.isEmpty  // enable_constrained_decoding
-        ) else {
+        // Step 3: Create conversation config using builder pattern
+        guard let convConfig = litert_lm_conversation_config_create() else {
             throw LiteRTLMError.conversationCreationFailed
+        }
+
+        litert_lm_conversation_config_set_session_config(convConfig, sessionConfig)
+
+        if let systemPrompt = configuration.systemPrompt {
+            litert_lm_conversation_config_set_system_message(convConfig, (systemPrompt as NSString).utf8String!)
+        }
+
+        if let toolsJSON {
+            litert_lm_conversation_config_set_tools(convConfig, (toolsJSON as NSString).utf8String!)
+        }
+
+        if !configuration.tools.isEmpty {
+            litert_lm_conversation_config_set_enable_constrained_decoding(convConfig, true)
         }
 
         // Step 4: Create the conversation

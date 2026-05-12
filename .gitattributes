@@ -12,3 +12,11 @@
 /example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
 /example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/LiteRTLM filter=lfs diff=lfs merge=lfs -text
 /example/testApp/modules/iphone/de.marcbender.litertlm/1.0.0/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/ios-arm64-maccatalyst/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/ios-arm64-maccatalyst/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/ios-arm64-simulator/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/ios-arm64-simulator/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/libLiteRt.dylib filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/libLiteRtTopKWebGpuSampler.dylib filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/libLiteRtWebGpuAccelerator.dylib filter=lfs diff=lfs merge=lfs -text
