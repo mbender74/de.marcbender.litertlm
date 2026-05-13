@@ -26,11 +26,7 @@ class LiteRTLMConversationConfiguration : KrollProxy() {
     @Kroll.setProperty fun setSystemPrompt(value: String?) { systemPrompt = value }
     @Kroll.getProperty fun getTools(): Any = tools
     @Kroll.setProperty fun setTools(value: Any?) {
-        @Suppress("UNCHECKED_CAST")
-        tools = when (value) {
-            is ArrayList<*> -> value.filterIsInstance<LiteRTLMTool>()
-            else -> emptyList()
-        }
+        tools = parseToolsArray(value)
     }
 
     override fun handleCreationDict(options: KrollDict?) {
@@ -43,8 +39,25 @@ class LiteRTLMConversationConfiguration : KrollProxy() {
             systemPrompt = it.getString("systemPrompt")
 
             val toolsArr = it["tools"]
-            if (toolsArr is ArrayList<*>) {
-                tools = toolsArr.filterIsInstance<LiteRTLMTool>()
+            tools = parseToolsArray(toolsArr)
+        }
+    }
+
+    private fun parseToolsArray(value: Any?): List<LiteRTLMTool> {
+        val items = when (value) {
+            is ArrayList<*> -> value
+            is Array<*> -> value.toList()
+            else -> return emptyList()
+        }
+        return items.mapNotNull { item ->
+            when (item) {
+                is LiteRTLMTool -> item
+                is HashMap<*, *> -> {
+                    val tool = LiteRTLMTool()
+                    tool.handleCreationDict(KrollDict(item as HashMap<String, Any>))
+                    tool
+                }
+                else -> null
             }
         }
     }

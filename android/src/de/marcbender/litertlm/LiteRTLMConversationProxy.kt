@@ -78,7 +78,10 @@ class LiteRTLMConversationProxy : KrollProxy() {
 
     @Kroll.method
     fun sendStream(args: Any) {
-        val text = extractText(args) ?: run {
+        Log.d(LCAT, "sendStream called with args type: ${args.javaClass.simpleName}")
+        val text = extractText(args)
+        Log.d(LCAT, "sendStream extracted text: '$text'")
+        if (text == null) {
             fireEvent("error", hashMapOf("message" to "Invalid message"))
             return
         }
@@ -248,14 +251,32 @@ class LiteRTLMConversationProxy : KrollProxy() {
     // MARK: - Helpers
 
     private fun extractText(args: Any): String? {
-        return when (args) {
-            is String -> args
+        Log.d(LCAT, "extractText: args type=${args.javaClass.simpleName}, value='$args'")
+        val unwrapped = when (args) {
+            is ArrayList<*> -> {
+                Log.d(LCAT, "extractText: unwrapping ArrayList of size ${args.size}")
+                args.firstOrNull()
+            }
+            else -> args
+        }
+        Log.d(LCAT, "extractText: unwrapped type=${unwrapped?.javaClass?.simpleName}")
+        return when (unwrapped) {
+            is String -> {
+                Log.d(LCAT, "extractText: got String '$unwrapped'")
+                unwrapped
+            }
             is LiteRTLMMessage -> {
-                args.contents.filterIsInstance<LiteRTLMContent>()
+                Log.d(LCAT, "extractText: got LiteRTLMMessage with ${unwrapped.contents.size} contents")
+                val result = unwrapped.contents.filterIsInstance<LiteRTLMContent>()
                     .filter { it.type == "text" }
                     .joinToString(" ") { it.text }
+                Log.d(LCAT, "extractText: extracted text from message: '$result'")
+                result
             }
-            else -> null
+            else -> {
+                Log.e(LCAT, "extractText: unexpected type ${unwrapped?.javaClass?.simpleName}")
+                null
+            }
         }
     }
 

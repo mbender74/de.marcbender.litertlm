@@ -41,10 +41,7 @@ class LiteRTLMTool : KrollProxy() {
     @Kroll.setProperty
     fun setParameters(value: Any?) {
         @Suppress("UNCHECKED_CAST")
-        parameters = when (value) {
-            is ArrayList<*> -> value.filterIsInstance<Map<String, Any?>>()
-            else -> emptyList()
-        }
+        parameters = parseParamsArray(value)
     }
 
     @Kroll.getProperty
@@ -58,13 +55,21 @@ class LiteRTLMTool : KrollProxy() {
         options?.let {
             name = it.getString("name") ?: name
             description = it.getString("description") ?: description
+            executeCallback = it["executeCallback"] as? KrollFunction
 
             val paramsObj = it["parameters"]
-            if (paramsObj is ArrayList<*>) {
-                @Suppress("UNCHECKED_CAST")
-                parameters = paramsObj.filterIsInstance<Map<String, Any?>>()
-            }
+            parameters = parseParamsArray(paramsObj)
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun parseParamsArray(value: Any?): List<Map<String, Any?>> {
+        val items = when (value) {
+            is ArrayList<*> -> value
+            is Array<*> -> value.toList()
+            else -> return emptyList()
+        }
+        return items.filterIsInstance<Map<String, Any?>>()
     }
 
     fun toOpenApiTool(): OpenApiTool {

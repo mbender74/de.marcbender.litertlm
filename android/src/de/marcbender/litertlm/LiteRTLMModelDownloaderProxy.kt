@@ -30,14 +30,28 @@ class LiteRTLMModelDownloaderProxy : KrollProxy() {
     fun getModelsDirectory(): String = modelsDirectory
 
     @Kroll.setProperty
-    fun setModelsDirectory(value: String) { modelsDirectory = value }
+    fun setModelsDirectory(value: String) { modelsDirectory = resolveTiPath(value) }
 
     fun initDownloader(modelsDir: String?) {
-        modelsDirectory = modelsDir ?: let {
+        modelsDirectory = modelsDir?.let { resolveTiPath(it) } ?: let {
             val app = TiApplication.getInstance()
             File(app.filesDir, "models").absolutePath
         }
         File(modelsDirectory).mkdirs()
+    }
+
+    private fun resolveTiPath(path: String): String {
+        return when {
+            path.startsWith("appdata-private://") -> {
+                val app = TiApplication.getInstance()
+                File(app.filesDir, path.substringAfter("appdata-private://")).absolutePath
+            }
+            path.startsWith("appdata://") -> {
+                val app = TiApplication.getInstance()
+                File(app.filesDir, path.substringAfter("appdata://")).absolutePath
+            }
+            else -> path
+        }
     }
 
     @Kroll.method

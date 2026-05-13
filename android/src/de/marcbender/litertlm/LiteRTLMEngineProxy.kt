@@ -105,13 +105,26 @@ class LiteRTLMEngineProxy : KrollProxy() {
             }
         }
 
+        var resolvedCacheDir = (cacheDir?.let { resolveTiPath(it) }
+            ?: resolvedPath.substringBeforeLast("/"))
+        // Ensure trailing slash so SDK appends "litertlm_cache" as a subdirectory
+        if (!resolvedCacheDir.endsWith("/")) resolvedCacheDir += "/"
+        val cacheSubdir = File(resolvedCacheDir, "litertlm_cache")
+        if (!cacheSubdir.exists()) {
+            val parentCreated = File(resolvedCacheDir).mkdirs()
+            val created = cacheSubdir.mkdirs()
+            Log.d(LCAT, "Cache dir: $resolvedCacheDir, parentCreated=$parentCreated, litertlm_cache created=$created, exists=${cacheSubdir.exists()}")
+        } else {
+            Log.d(LCAT, "Cache dir already exists: ${cacheSubdir.absolutePath}")
+        }
+
         val config = EngineConfig(
             modelPath = resolvedPath,
             backend = backendObj,
             visionBackend = visionBackendObj,
             audioBackend = audioBackendObj,
             maxNumTokens = if (maxTokens > 0) maxTokens else null,
-            cacheDir = cacheDir ?: resolvedPath.substringBeforeLast("/")
+            cacheDir = resolvedCacheDir
         )
 
         val eng = Engine(config)
@@ -177,6 +190,7 @@ class LiteRTLMEngineProxy : KrollProxy() {
     fun createConversationWithConfig(args: Any) {
         val configProxy = extractProxy<LiteRTLMConversationConfiguration>(args) ?: return
         val toolProxies = configProxy.tools
+        Log.d(LCAT, "createConversationWithConfig: tools=${toolProxies.size}, systemPrompt=${configProxy.systemPrompt?.take(50)}, samplerType=${configProxy.samplerType}, maxOutputTokens=${configProxy.maxOutputTokens}")
 
         backgroundExecutor.execute {
             try {
@@ -261,12 +275,28 @@ class LiteRTLMEngineProxy : KrollProxy() {
 
     private fun resolveModelPath(path: String): String {
         if (path.startsWith("/")) return path
+        if (path.startsWith("appdata-private://") || path.startsWith("appdata://")) return resolveTiPath(path)
         val dl = moduleRef?.getDownloader()
         val basePath = dl?.getModelsDirectory() ?: let {
             val app = TiApplication.getInstance()
             File(app.filesDir, "models").absolutePath
         }
         return File(basePath, path).absolutePath
+    }
+
+    private fun resolveTiPath(path: String): String {
+        val app = TiApplication.getInstance()
+        return when {
+            path.startsWith("appdata-private://") -> {
+                val relative = path.substringAfter("appdata-private://").removePrefix("/")
+                File(app.filesDir, relative).absolutePath
+            }
+            path.startsWith("appdata://") -> {
+                val relative = path.substringAfter("appdata://").removePrefix("/")
+                File(app.filesDir, relative).absolutePath
+            }
+            else -> path
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
