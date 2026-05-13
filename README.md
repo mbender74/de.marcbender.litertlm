@@ -1,145 +1,184 @@
-# TitaniumLiteRTLM – On-Device LLM Inference for Titanium iOS
+# TitaniumLiteRTLM – On-Device LLM Inference for Titanium
 
-> **LiteRTLM** ist ein Titanium-Modul, das das vollständige [Google LiteRTLM-Swift-SDK](https://github.com/google/litert) als iOS-Modul verfügbar macht. Es ermöglicht die Ausführung von Large Language Models (LLMs) direkt auf dem Gerät – ohne Netzwerkverbindung, ohne Cloud-Abhängigkeiten, mit Datenschutz und niedriger Latenz.
+> **LiteRTLM** is a Titanium module that wraps the full [Google LiteRT-LM SDK](https://github.com/google/litert) for both iOS and Android. It enables running Large Language Models (LLMs) directly on-device — no network connection, no cloud dependencies, full privacy and low latency.
 
-[![Platform](https://img.shields.io/badge/platform-iOS-blue.svg)](https://developer.apple.com/ios/)
+[![Platform](https://img.shields.io/badge/platform-iOS%20%26%20Android-blue.svg)](https://github.com/marcbender/TitaniumLiteRTLM)
 [![Swift](https://img.shields.io/badge/swift-5.9-orange.svg)](https://swift.org/)
+[![Kotlin](https://img.shields.io/badge/kotlin-1.9-purple.svg)](https://kotlinlang.org/)
 [![Titanium](https://img.shields.io/badge/titanium-13.x-brightgreen.svg)](https://ti.appcelerator.com/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
-## 📋 Inhaltsverzeichnis
+## Table of Contents
 
-- [Features](#-features)
-- [Systemanforderungen](#-systemanforderungen)
-- [Installation](#-installation)
-- [Konfiguration](#-konfiguration)
+- [Features](#features)
+- [System Requirements](#system-requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
   - [tiapp.xml](#tiappxml)
-  - [info.plist](#infoplist)
-- [API-Referenz](#-api-referenz)
-  - [Hauptmodul (de.marcbender.litertlm)](#hauptmodul-demarcbenderlitertlm)
+  - [iOS: info.plist](#ios-infoplist)
+  - [Android: AndroidManifest.xml](#android-androidmanifestxml)
+- [API Reference](#api-reference)
+  - [Main Module (de.marcbender.litertlm)](#main-module-demarcbenderlitertlm)
   - [LiteRTLMEngine](#litemrtlmengine)
   - [LiteRTLMEngineConfiguration](#litemrtlmengineconfiguration)
-  - [LiteRTLMSession](#litemrtlmSession)
-  - [LiteRTLMSessionConfiguration](#litemrtlmSessionconfiguration)
-  - [LiteRTLMConversation](#litemrtlmConversation)
-  - [LiteRTLMConversationConfiguration](#litemrtlmConversationconfiguration)
-  - [LiteRTLMSamplerConfiguration](#litemrtlmSamplerConfiguration)
-  - [LiteRTLMContent](#litemrtlmContent)
-  - [LiteRTLMMessage](#litemrtlmMessage)
-  - [LiteRTLMTool](#litemrtlmTool)
-  - [LiteRTLMModelInfo](#litemrtlmModelInfo)
-  - [LiteRTLMModelDownloader](#litemrtlmModelDownloader)
-- [Vollständiges Beispiel](#-vollständiges-beispiel)
-- [Streaming-API](#-streaming-api)
-- [Tool Calling / Function Calling](#-tool-calling--function-calling)
-- [Mehrmodale Eingabe (Vision, Audio)](#-mehrmodale-eingabe-vision-audio)
-- [Fehlerbehandlung](#-fehlerbehandlung)
-- [Modell-Downloads](#-modell-downloads)
-- [Performance-Tipps](#-performance-tipps)
-- [Debugging](#-debugging)
-- [Bekannte Einschränkungen](#-bekannte-einschränkungen)
-- [Roadmap](#-roadmap)
-- [Lizenz](#-lizenz)
+  - [LiteRTLMSession](#litertlmsession)
+  - [LiteRTLMSessionConfiguration](#litertlmsessionconfiguration)
+  - [LiteRTLMConversation](#litemrtlmconversation)
+  - [LiteRTLMConversationConfiguration](#litemrtlmconversationconfiguration)
+  - [LiteRTLMSamplerConfiguration](#litertlmsamplerconfiguration)
+  - [LiteRTLMContent](#litemrtlmcontent)
+  - [LiteRTLMMessage](#litemrtlmmessage)
+  - [LiteRTLMTool](#litemrtlmtool)
+  - [LiteRTLMModelInfo](#litemrtlmmodelinfo)
+  - [LiteRTLMModelDownloader](#litemrtlmmodeldownloader)
+- [Full Example](#full-example)
+- [Streaming API](#streaming-api)
+- [Tool Calling / Function Calling](#tool-calling--function-calling)
+- [Multimodal Input (Vision, Audio)](#multimodal-input-vision-audio)
+- [Error Handling](#error-handling)
+- [Model Downloads](#model-downloads)
+- [Performance Tips](#performance-tips)
+- [Debugging](#debugging)
+- [Known Limitations](#known-limitations)
+- [Platform Differences](#platform-differences)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
-## ✨ Features
+## Features
 
-- **Vollständige API-Abdeckung**: Engine, Sessions, Conversations, Streaming, Tool Calling, mehrmodale Eingabe
-- **On-Device-Inferenz**: Keine Internetverbindung erforderlich, alle Daten bleiben auf dem Gerät
-- **Stream-Verarbeitung**: Token-für-Token-Ausgabe in Echtzeit
-- **Tool Calling**: LLMs können Funktionen Ihrer App aufrufen
-- **Mehrmodale Eingabe**: Text, Bilder (Vision) und Audio
-- **Modell-Downloader**: Integriertes Herunterladen und Verwalten von Modellen
-- **Konfigurierbare Sampler**: Greedy, Balanced, Creative oder benutzerdefiniert
-- **Benchmarking**: Leistungsmessung der Modell-Inferenz
-- **Speicheroptimiert**: Modell-Last/Entlastung zur Laufzeit
-
----
-
-## 📱 Systemanforderungen
-
-| Komponente | Mindestversion | Empfohlen |
-|------------|----------------|-----------|
-| **iOS** | 17.0 | 17.6+ |
-| **Titanium SDK** | 13.2.0.GA | 13.3.x oder neuer |
-| **Xcode** | 15.0 | 16.x oder neuer |
-| **Swift** | 5.9 | 5.10+ |
-| **Hardware** | A12 Bionic (iOS 17 Gerät) | A15+ oder M-Series Chip |
-
-> **Hinweis**: Das Modul unterstützt ausschließlich **arm64**-Architektur (physische Geräte und Apple Silicon Simulatoren). x86_64-Simulator wird nicht unterstützt.
+- **Full API coverage**: Engine, Sessions, Conversations, Streaming, Tool Calling, Multimodal Input
+- **Cross-platform**: iOS and Android with a unified JavaScript API
+- **On-device inference**: No internet connection required, all data stays on the device
+- **Stream processing**: Real-time token-by-token output
+- **Tool Calling**: LLMs can call functions in your app
+- **Multimodal input**: Text, images (vision) and audio
+- **Model Downloader**: Built-in model download and management
+- **Configurable samplers**: Greedy, Balanced, Creative, or custom
+- **Benchmarking**: Model inference performance measurement
+- **Memory-optimized**: Runtime model load/unload
 
 ---
 
-## 📦 Installation
+## System Requirements
 
-### Option 1: Lokales ZIP (Empfohlen)
+| Component | iOS Minimum | Android Minimum | Recommended |
+|-----------|------------|-----------------|-------------|
+| **OS** | iOS 17.0 | Android 8.0 (API 26) | iOS 17.6+ / Android 10+ |
+| **Titanium SDK** | 13.2.0.GA | 13.2.0.GA | 13.3.x or newer |
+| **Xcode** | 15.0 | N/A | 16.x or newer |
+| **Hardware** | A12 Bionic | ARM64 device | A15+ or M-Series / Snapdragon 8+ |
 
-1. Bauen Sie das Modul:
+> **Note**: On iOS, only **arm64** architecture is supported (physical devices and Apple Silicon simulators). On Android, **arm64-v8a** and **x86_64** architectures are supported.
+
+---
+
+## Installation
+
+### Option 1: Local ZIP (Recommended)
+
+#### iOS
+
+1. Build the module:
    ```bash
    cd TitaniumLiteRTLM/ios
    ti build -p ios --build-only
    ```
 
-2. Das ZIP entsteht im `dist`-Verzeichnis:
+2. The ZIP is generated in the `dist` directory:
    ```
    ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip
    ```
 
-3. Kopieren Sie das ZIP in Ihr Projekt-Root oder in das Module-Verzeichnis:
+3. Copy the ZIP to your project:
    ```bash
    cp ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip /path/to/your-project/modules/
    ```
 
-### Option 2: Globale Installation
+#### Android
 
-Kopieren Sie das ZIP in den globalen Module-Ordner:
+1. Build the module:
+   ```bash
+   cd TitaniumLiteRTLM/android
+   ti build -p android --build-only
+   ```
+
+2. The ZIP is generated in the `dist` directory:
+   ```
+   android/dist/de.marcbender.litertlm-android-1.0.0.zip
+   ```
+
+3. Copy the ZIP to your project:
+   ```bash
+   cp android/dist/de.marcbender.litertlm-android-1.0.0.zip /path/to/your-project/modules/
+   ```
+
+### Option 2: Global installation
+
+Copy the ZIP to the global module directory:
 
 ```bash
+# iOS
 cp ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip \
+   ~/Library/Application Support/Titanium/modules/de.marcbender.litertlm/
+
+# Android
+cp android/dist/de.marcbender.litertlm-android-1.0.0.zip \
    ~/Library/Application Support/Titanium/modules/de.marcbender.litertlm/
 ```
 
 ---
 
-## ⚙️ Konfiguration
+## Configuration
 
 ### tiapp.xml
 
-Fügen Sie das Modul in Ihre `tiapp.xml` ein:
+Add the module for both platforms:
 
 ```xml
 <modules>
     <module version="1.0.0" platform="ios">de.marcbender.litertlm</module>
+    <module version="1.0.0" platform="android">de.marcbender.litertlm</module>
 </modules>
 ```
 
-### info.plist
+### iOS: info.plist
 
-Für Kamera-/Foto-Zugriff bei Vision-Funktionen fügen Sie hinzu:
+For camera/photo access with vision features, add:
 
 ```xml
 <key>NSCameraUsageDescription</key>
-<string>Benötigt für die Bilderkennung in Conversations</string>
+<string>Required for image recognition in conversations</string>
 
 <key>NSMicrophoneUsageDescription</key>
-<string>Benötigt für Audio-Eingabe in Conversations</string>
+<string>Required for audio input in conversations</string>
 
 <key>NSPhotoLibraryUsageDescription</key>
-<string>Benötigt für die Auswahl von Bildern aus der Fotomediathek</string>
+<string>Required for selecting images from the photo library</string>
+```
+
+### Android: AndroidManifest.xml
+
+The module automatically adds the `INTERNET` permission for model downloads. If you need camera/microphone access:
+
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
 ---
 
-## 📚 API-Referenz
+## API Reference
 
-### Hauptmodul (`de.marcbender.litertlm`)
+### Main Module (`de.marcbender.litertlm`)
 
 #### `getVersion()` → `String`
 
-Gibt die Modul-Version zurück.
+Returns the module version.
 
 ```javascript
 var version = litertlm.getVersion();
@@ -148,25 +187,25 @@ console.log('Module version: ' + version);
 
 #### `createEngine(args)` → `undefined`
 
-Lädt ein Modell und erstellt eine `LiteRTLMEngine`.
+Loads a model and creates a `LiteRTLMEngine`.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Standard | Beschreibung |
-|-----------|-----|----------|--------------|
-| `modelPath` | `String` | erforderlich | Pfad zur Modell-Datei oder -directory |
-| `backend` | `String` | `'cpu'` | `'cpu'`, `'gpu'` |
-| `maxTokens` | `Int32` | `0` (unbegrenzt) | Maximale Anzahl generierter Tokens |
-| `cacheDir` | `String` | `null` | Cache-Verzeichnis für das Modell |
-| `benchmarkEnabled` | `Boolean` | `false` | Leistungsmessung aktivieren |
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `modelPath` | `String` | required | Path to model file or directory |
+| `backend` | `String` | `'cpu'` | `'cpu'` or `'gpu'` |
+| `maxTokens` | `Int32` | `0` (unlimited) | Maximum number of generated tokens |
+| `cacheDir` | `String` | `null` | Cache directory for the model |
+| `benchmarkEnabled` | `Boolean` | `false` | Enable benchmarking |
 | `logLevel` | `String` | `'warning'` | `'error'`, `'warning'`, `'info'`, `'fatal'`, `'silent'` |
 
-**Ereignisse:**
+**Events:**
 
-- `enginecreated` – Wird ausgelöst, wenn die Engine erfolgreich geladen wurde
-  - `engine`: `LiteRTLMEngine` Proxy-Objekt
+- `enginecreated` – Fired when the engine is loaded successfully
+  - `engine`: `LiteRTLMEngine` proxy object
 
-**Beispiel:**
+**Example:**
 
 ```javascript
 litertlm.createEngine({
@@ -185,7 +224,7 @@ litertlm.addEventListener('enginecreated', function(e) {
 
 #### `createEngineWithConfig(config)` → `undefined`
 
-Erstellt eine Engine mit einem `LiteRTLMEngineConfiguration`-Objekt.
+Creates an engine with a `LiteRTLMEngineConfiguration` object.
 
 ```javascript
 var config = litertlm.createEngineConfigProxy({
@@ -200,100 +239,97 @@ litertlm.createEngineWithConfig(config);
 
 #### `createEngineConfigProxy(args)` → `LiteRTLMEngineConfiguration`
 
-Erstellt eine Engine-Konfiguration.
+Creates an engine configuration.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `modelPath` | `String` | Pfad zum Modell |
-| `backend` | `String` | `'cpu'` oder `'gpu'` |
-| `maxTokens` | `Int32` | Maximale Token-Anzahl |
-| `cacheDir` | `String` | Cache-Verzeichnis |
-| `benchmarkEnabled` | `Boolean` | Benchmarking aktivieren |
-| `logLevel` | `String` | Log-Stufe |
-| `visionBackend` | `String` | Backend für Vision/ Bilder |
-| `audioBackend` | `String` | Backend für Audio |
+| Key | Type | Description |
+|-----|------|-------------|
+| `modelPath` | `String` | Path to the model |
+| `backend` | `String` | `'cpu'` or `'gpu'` |
+| `maxTokens` | `Int32` | Maximum token count |
+| `cacheDir` | `String` | Cache directory |
+| `benchmarkEnabled` | `Boolean` | Enable benchmarking |
+| `logLevel` | `String` | Log level |
+| `visionBackend` | `String` | Backend for vision/images |
+| `audioBackend` | `String` | Backend for audio |
 
 #### `createSessionConfigProxy(args)` → `LiteRTLMSessionConfiguration`
 
-Erstellt eine Session-Konfiguration.
+Creates a session configuration.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `maxOutputTokens` | `Int32` | Maximale Output-Token |
+| Key | Type | Description |
+|-----|------|-------------|
+| `maxOutputTokens` | `Int32` | Maximum output tokens |
 | `samplerType` | `String` | `'greedy'`, `'balanced'`, `'creative'` |
 
 #### `createConversationConfigProxy(args)` → `LiteRTLMConversationConfiguration`
 
-Erstellt eine Conversation-Konfiguration.
+Creates a conversation configuration.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `maxOutputTokens` | `Int32` | Maximale Output-Token |
-| `samplerType` | `String` | Sampler-Typ |
-| `tools` | `Array` | Liste von `LiteRTLMTool`-Objekten |
+| Key | Type | Description |
+|-----|------|-------------|
+| `maxOutputTokens` | `Int32` | Maximum output tokens |
+| `samplerType` | `String` | Sampler type |
+| `tools` | `Array` | List of `LiteRTLMTool` objects |
 | `toolExecutionMode` | `String` | `'auto'`, `'required'`, `'disabled'` |
-| `maxImageDimension` | `Int` | Maximale Bildgröße in Pixel |
-| `systemPrompt` | `String` | System-Prompt für die Conversation |
+| `maxImageDimension` | `Int` | Maximum image size in pixels |
+| `systemPrompt` | `String` | System prompt for the conversation |
 
 #### `createSamplerConfigProxy(args)` → `LiteRTLMSamplerConfiguration`
 
-Erstellt eine Sampler-Konfiguration für feinkörnige Steuerung der Textgenerierung.
+Creates a sampler configuration for fine-grained control of text generation.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `temperature` | `Double` | 0.0–2.0 (niedrig = deterministisch, hoch = kreativ) |
-| `topK` | `Int32` | Nur die Top-K Tokens berücksichtigen |
-| `topP` | `Double` | Nukleare Abtastung (0.0–1.0) |
-| `seed` | `Int32` | Zufalls-Seed für Reproduzierbarkeit |
+| Key | Type | Description |
+|-----|------|-------------|
+| `temperature` | `Double` | 0.0–2.0 (low = deterministic, high = creative) |
+| `topK` | `Int32` | Consider only the top-K tokens |
+| `topP` | `Double` | Nucleus sampling (0.0–1.0) |
+| `seed` | `Int32` | Random seed for reproducibility |
 | `samplerType` | `String` | `'greedy'`, `'balanced'`, `'creative'` |
 
 #### `createContentProxy(args)` → `LiteRTLMContent`
 
-Erstellt ein Content-Objekt für Text, Bilder oder Audio.
+Creates a content object for text, images, or audio.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
+| Key | Type | Description |
+|-----|------|-------------|
 | `type` | `String` | `'text'`, `'image'`, `'audio'` |
-| `text` | `String` | Textinhalt (für type='text') |
-| `imageData` | `Ti.Blob` | Bilddaten (für type='image') |
-| `audioData` | `Ti.Blob` | Audiodaten (für type='audio') |
-| `audioFormat` | `String` | Audio-Format (z.B. `'wav'`, `'mp3'`) |
-| `maxDimension` | `Int` | Maximale Bildabmessung |
+| `text` | `String` | Text content (for type='text') |
+| `imageData` | `Ti.Blob` | Image data (for type='image') |
+| `audioData` | `Ti.Blob` | Audio data (for type='audio') |
+| `audioFormat` | `String` | Audio format (e.g. `'wav'`, `'mp3'`) |
+| `maxDimension` | `Int` | Maximum image dimension |
 
 #### `createMessageProxy(args)` → `LiteRTLMMessage`
 
-Erstellt eine Message (Nutzlast) für eine Conversation.
+Creates a message (payload) for a conversation.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
+| Key | Type | Description |
+|-----|------|-------------|
 | `role` | `String` | `'user'`, `'model'`, `'system'` |
-| `contents` | `Array` | Liste von `LiteRTLMContent`-Objekten |
+| `contents` | `Array` | List of `LiteRTLMContent` objects |
 
-**Hilfsfunktionen:**
+**Helper functions:**
 
 ```javascript
-// Benutzer-Nachricht
+// User message
 var userMsg = litertlm.createMessageProxy({
     role: 'user',
     contents: [content]
 });
 
-// Modell-Antwort (vom System gesetzt)
-// role: 'model'
-
-// System-Prompt
+// System prompt
 var systemMsg = litertlm.createMessageProxy({
     role: 'system',
     contents: [textContent]
@@ -302,45 +338,45 @@ var systemMsg = litertlm.createMessageProxy({
 
 #### `createToolProxy(args)` → `LiteRTLMTool`
 
-Erstellt ein Tool (Function) für das Tool Calling.
+Creates a tool (function) for tool calling.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `name` | `String` | Name der Funktion |
-| `description` | `String` | Beschreibung, was die Funktion tut |
-| `parameters` | `Array` | Parameter-Definitionen |
+| Key | Type | Description |
+|-----|------|-------------|
+| `name` | `String` | Function name |
+| `description` | `String` | Description of what the function does |
+| `parameters` | `Array` | Parameter definitions |
 
-**Parameter-Schema:**
+**Parameter schema:**
 
-Jeder Parameter ist ein Objekt mit:
+Each parameter is an object with:
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `name` | `String` | Name des Parameters |
+| Key | Type | Description |
+|-----|------|-------------|
+| `name` | `String` | Parameter name |
 | `type` | `String` | `'string'`, `'number'`, `'boolean'`, `'object'`, `'array'` |
-| `description` | `String` | Beschreibung des Parameters |
-| `required` | `Boolean` | Ob der Parameter erforderlich ist |
+| `description` | `String` | Parameter description |
+| `required` | `Boolean` | Whether the parameter is required |
 
-**Beispiel:**
+**Example:**
 
 ```javascript
 var tool = litertlm.createToolProxy({
     name: 'get_weather',
-    description: 'Holt das aktuelle Wetter für einen Ort',
+    description: 'Gets the current weather for a location',
     parameters: [{
         name: 'location',
         type: 'string',
-        description: 'Stadt oder Postleitzahl',
+        description: 'City or zip code',
         required: true
     }]
 });
 
-// Callback für die Tool-Ausführung
+// Callback for tool execution
 tool.executeCallback = function(args, callback) {
     var location = args.location;
-    // Wetter-API aufrufen...
+    // Call weather API...
     var result = { temperature: 22, condition: 'sunny' };
     callback(result);
 };
@@ -348,48 +384,55 @@ tool.executeCallback = function(args, callback) {
 
 #### `createDownloader(args)` → `LiteRTLMModelDownloader`
 
-Erstellt einen Model-Downloader.
+Creates a model downloader.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `modelsDirectory` | `String` | Verzeichnis zum Speichern von Modellen |
+| Key | Type | Description |
+|-----|------|-------------|
+| `modelsDirectory` | `String` | Directory for storing models |
 
 #### `createModelInfo(args)` → `LiteRTLMModelInfo`
 
-Erstellt ein ModelInfo-Objekt für das Herunterladen.
+Creates a model info object for downloading.
 
-**Parameter:**
+**Parameters:**
 
-| Schlüssel | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `name` | `String` | Interner Modellname |
-| `displayName` | `String` | Anzeige-Name |
-| `url` | `String` | Download-URL |
-| `expectedSize` | `Int64` | Erwartete Dateigröße in Bytes |
-| `fileName` | `String` | Dateiname nach dem Download |
+| Key | Type | Description |
+|-----|------|-------------|
+| `name` | `String` | Internal model name |
+| `displayName` | `String` | Display name |
+| `url` | `String` | Download URL |
+| `expectedSize` | `Int64` | Expected file size in bytes |
+| `fileName` | `String` | File name after download |
+
+#### `closeConversation(conv)` → `undefined`
+
+Safely closes a conversation from the module level.
+
+#### `unloadEngine(engine)` → `undefined`
+
+Safely unloads an engine from the module level.
 
 ---
 
-### `LiteRTLMEngine`
+### LiteRTLMEngine
 
-Repräsentiert eine geladene LLM-Engine.
+Represents a loaded LLM engine.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `status` | `String` | `'notLoaded'`, `'loaded'`, `'loading'`, `'error'` |
-| `isReady` | `Boolean` | Ob die Engine bereit ist |
-| `lastError` | `String` | Fehlermeldung oder `null` |
-| `configuration` | `LiteRTLMEngineConfiguration` | Konfiguration der Engine |
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `String` | `'notLoaded'`, `'loading'`, `'ready'`, `'error'` |
+| `isReady` | `Boolean` | Whether the engine is ready |
+| `lastError` | `String` | Error message or `null` |
 
-#### Methoden
+#### Methods
 
 ##### `load()` → `undefined`
 
-Lädt das Modell in den Speicher.
+Loads the model into memory.
 
 ```javascript
 engine.load();
@@ -397,7 +440,7 @@ engine.load();
 
 ##### `unload()` → `undefined`
 
-Entlastet das Modell aus dem Speicher.
+Unloads the model from memory.
 
 ```javascript
 engine.unload();
@@ -405,16 +448,16 @@ engine.unload();
 
 ##### `createSession(config?)` → `undefined`
 
-Erstellt eine neue Session.
+Creates a new session.
 
-**Parameter:**
+**Parameters:**
 
 - `config` (`LiteRTLMSessionConfiguration`, optional)
 
-**Ereignisse:**
+**Events:**
 
-- `sessioncreated` – Session erfolgreich erstellt
-  - `session`: `LiteRTLMSession` Proxy-Objekt
+- `sessioncreated` – Session created successfully
+  - `session`: `LiteRTLMSession` proxy object
 
 ```javascript
 engine.createSession();
@@ -422,7 +465,7 @@ engine.createSession();
 
 ##### `createSessionWithConfig(config)` → `undefined`
 
-Erstellt eine Session mit Konfiguration.
+Creates a session with configuration.
 
 ```javascript
 var config = litertlm.createSessionConfigProxy({
@@ -434,12 +477,12 @@ engine.createSessionWithConfig(config);
 
 ##### `createConversation(config?)` → `undefined`
 
-Erstellt eine neue Conversation.
+Creates a new conversation.
 
-**Ereignisse:**
+**Events:**
 
-- `conversationcreated` – Conversation erfolgreich erstellt
-  - `conversation`: `LiteRTLMConversation` Proxy-Objekt
+- `conversationcreated` – Conversation created successfully
+  - `conversation`: `LiteRTLMConversation` proxy object
 
 ```javascript
 engine.createConversation();
@@ -447,11 +490,11 @@ engine.createConversation();
 
 ##### `createConversationWithConfig(config)` → `undefined`
 
-Erstellt eine Conversation mit Konfiguration.
+Creates a conversation with configuration.
 
 ```javascript
 var config = litertlm.createConversationConfigProxy({
-    systemPrompt: 'Du bist ein hilfreicher Assistent.',
+    systemPrompt: 'You are a helpful assistant.',
     maxOutputTokens: 1024,
     toolExecutionMode: 'auto'
 });
@@ -460,60 +503,60 @@ engine.createConversationWithConfig(config);
 
 ---
 
-### `LiteRTLMEngineConfiguration`
+### LiteRTLMEngineConfiguration
 
-Konfiguration für die Engine.
+Configuration for the engine.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `modelPath` | `String` | Pfad zum Modell |
-| `primaryBackend` | `String` | `'cpu'` oder `'gpu'` |
-| `visionBackend` | `String` | Vision-Backend |
-| `audioBackend` | `String` | Audio-Backend |
-| `maxTokens` | `Int32` | Maximale Tokens |
-| `cacheDir` | `String` | Cache-Verzeichnis |
-| `isBenchmarkEnabled` | `Boolean` | Benchmarking aktiv |
-| `logLevel` | `String` | Log-Stufe |
+| Property | Type | Description |
+|----------|------|-------------|
+| `modelPath` | `String` | Path to the model |
+| `primaryBackend` | `String` | `'cpu'` or `'gpu'` |
+| `visionBackend` | `String` | Vision backend |
+| `audioBackend` | `String` | Audio backend |
+| `maxTokens` | `Int32` | Maximum tokens |
+| `cacheDir` | `String` | Cache directory |
+| `isBenchmarkEnabled` | `Boolean` | Benchmarking enabled |
+| `logLevel` | `String` | Log level |
 
 ---
 
-### `LiteRTLMSession`
+### LiteRTLMSession
 
-Repräsentiert eine einzelne Inferenz-Session (einzelne Anfrage).
+Represents a single inference session (single request).
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `isActive` | `Boolean` | Ob die Session aktiv ist |
+| Property | Type | Description |
+|----------|------|-------------|
+| `isActive` | `Boolean` | Whether the session is active |
 
-#### Methoden
+#### Methods
 
 ##### `generate(text, config?)` → `undefined`
 
-Generiert Text als Antwort auf eine Eingabe.
+Generates text in response to an input.
 
 ```javascript
-session.generate('Was ist KI?');
+session.generate('What is AI?');
 ```
 
-**Ereignisse:**
+**Events:**
 
-- `generateready` – Generierung abgeschlossen
-  - `result`: `String` – Die generierte Antwort
-  - `benchmarkInfo`: `Object` (optional) – Leistungsinformationen
+- `generateready` – Generation completed
+  - `result`: `String` – The generated response
+  - `benchmarkInfo`: `Object` (optional) – Performance information
 
-- `generateerror` – Fehler bei der Generierung
-  - `message`: `String` – Fehlermeldung
+- `generateerror` – Error during generation
+  - `message`: `String` – Error message
 
 ##### `generateMultimodal(contents, config?)` → `undefined`
 
-Generiert eine Antwort auf mehrmodale Eingabe (Text + Bilder + Audio).
+Generates a response to multimodal input (text + images + audio).
 
 ```javascript
-var textContent = litertlm.createContentProxy({ type: 'text', text: 'Was siehst du auf dem Bild?' });
+var textContent = litertlm.createContentProxy({ type: 'text', text: 'What do you see in the image?' });
 var imageContent = litertlm.createContentProxy({
     type: 'image',
     imageData: imageBlob,
@@ -525,40 +568,40 @@ session.generateMultimodal([textContent, imageContent]);
 
 ##### `generateStream(text, config?)` → `undefined`
 
-Startet einen Streaming-Generierungsprozess.
+Starts a streaming generation process.
 
 ```javascript
-session.generateStream('Erzähle eine Geschichte.');
+session.generateStream('Tell me a story.');
 ```
 
-**Ereignisse:**
+**Events:**
 
-- `streamstart` – Streaming gestartet
-  - `sessionId`: `String` – ID der Session
+- `streamstart` – Streaming started
+  - `sessionId`: `String` – Session ID
 
-- `token` – Neues Token empfangen
-  - `token`: `String` – Das empfangene Token
+- `token` – New token received
+  - `token`: `String` – The received token
 
-- `streamcomplete` – Streaming abgeschlossen
-  - `result`: `String` – Vollständige Antwort
+- `streamcomplete` – Streaming completed
+  - `result`: `String` – Full response
   - `benchmarkInfo`: `Object` (optional)
 
-- `streamerror` – Fehler beim Streaming
-  - `message`: `String` – Fehlermeldung
+- `streamerror` – Error during streaming
+  - `message`: `String` – Error message
 
-- `streamend` – Streaming beendet (unabhängig vom Ergebnis)
+- `streamend` – Streaming ended
 
 ##### `collectStream(text, config?)` → `undefined`
 
-Startet Streaming und sammelt alle Tokens in einem Ergebnis.
+Starts streaming and collects all tokens into a result.
 
 ```javascript
-session.collectStream('Erkläre Quantenphysik einfach.');
+session.collectStream('Explain quantum physics simply.');
 ```
 
 ##### `close()` → `undefined`
 
-Schließt die Session.
+Closes the session.
 
 ```javascript
 session.close();
@@ -566,49 +609,49 @@ session.close();
 
 ##### `benchmarkInfo` → `Object`
 
-Gibt Performance-Informationen zurück.
+Returns performance information.
 
 ```javascript
 var info = session.benchmarkInfo;
-console.log('Token/s: ' + info.tokensPerSecond);
-console.log('Zeit: ' + info.latencyMs + 'ms');
+console.log('Tokens/s: ' + info.tokensPerSecond);
+console.log('Time: ' + info.latencyMs + 'ms');
 ```
 
 ---
 
-### `LiteRTLMSessionConfiguration`
+### LiteRTLMSessionConfiguration
 
-Konfiguration für eine Session.
+Configuration for a session.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `maxOutputTokens` | `Int32` | Maximale Output-Token |
+| Property | Type | Description |
+|----------|------|-------------|
+| `maxOutputTokens` | `Int32` | Maximum output tokens |
 | `samplerType` | `String` | `'greedy'`, `'balanced'`, `'creative'` |
-| `temperature` | `Float` | Temperatur (0.0–2.0) |
-| `topK` | `Int32` | Top-K-Wert |
-| `topP` | `Float` | Top-P-Wert (Nukleare Abtastung) |
-| `seed` | `Int32` | Zufalls-Seed |
+| `temperature` | `Float` | Temperature (0.0–2.0) |
+| `topK` | `Int32` | Top-K value |
+| `topP` | `Float` | Top-P value (nucleus sampling) |
+| `seed` | `Int32` | Random seed |
 
 ---
 
-### `LiteRTLMConversation`
+### LiteRTLMConversation
 
-Repräsentiert eine mehrfache Conversation mit History.
+Represents a multi-turn conversation with history.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `isActive` | `Boolean` | Ob die Conversation aktiv ist |
-| `history` | `Array` | Liste von `LiteRTLMMessage`-Objekten |
+| Property | Type | Description |
+|----------|------|-------------|
+| `isActive` | `Boolean` | Whether the conversation is active |
+| `history` | `Array` | List of `LiteRTLMMessage` objects |
 
-#### Methoden
+#### Methods
 
 ##### `send(message, config?)` → `undefined`
 
-Sendet eine Nachricht und erhält eine Antwort.
+Sends a message and receives a response.
 
 ```javascript
 var message = litertlm.createMessageProxy({
@@ -619,18 +662,18 @@ var message = litertlm.createMessageProxy({
 conversation.send(message);
 ```
 
-**Ereignisse:**
+**Events:**
 
-- `messagecomplete` – Antwort vollständig
-  - `message`: `LiteRTLMMessage` – Antwort des Modells
+- `messagecomplete` – Response complete
+  - `message`: `LiteRTLMMessage` – Model's response
   - `benchmarkInfo`: `Object` (optional)
 
-- `messageerror` – Fehler beim Senden
-  - `message`: `String` – Fehlermeldung
+- `messageerror` – Error sending message
+  - `message`: `String` – Error message
 
 ##### `sendMultimodal(message, config?)` → `undefined`
 
-Sendet eine mehrmodale Nachricht.
+Sends a multimodal message.
 
 ```javascript
 var message = litertlm.createMessageProxy({
@@ -643,23 +686,23 @@ conversation.sendMultimodal(message);
 
 ##### `sendStream(message, config?)` → `undefined`
 
-Sendet eine Nachricht mit Streaming-Antwort.
+Sends a message with streaming response.
 
-**Ereignisse:**
+**Events:**
 
-- `streamstart` – Streaming gestartet
-- `token` – Neues Token (siehe Session)
-- `streamcomplete` – Streaming abgeschlossen
-- `streamerror` – Fehler
-- `streamend` – Streaming beendet
+- `streamstart` – Streaming started
+- `token` – New token
+- `streamcomplete` – Streaming completed
+- `streamerror` – Error
+- `streamend` – Streaming ended
 
 ##### `collectStream(message, config?)` → `undefined`
 
-Sammelt alle Tokens einer Streaming-Antwort.
+Collects all tokens from a streaming response.
 
 ##### `cancel()` → `undefined`
 
-Bricht die aktuelle Anfrage ab.
+Cancels the current request.
 
 ```javascript
 conversation.cancel();
@@ -667,7 +710,7 @@ conversation.cancel();
 
 ##### `close()` → `undefined`
 
-Schließt die Conversation.
+Closes the conversation.
 
 ```javascript
 conversation.close();
@@ -675,59 +718,59 @@ conversation.close();
 
 ##### `getHistory()` → `Array`
 
-Gibt den Conversation-Verlauf zurück.
+Returns the conversation history.
 
 ```javascript
 var history = conversation.getHistory();
-console.log('Nachrichten im Verlauf: ' + history.length);
+console.log('Messages in history: ' + history.length);
 ```
 
 ---
 
-### `LiteRTLMConversationConfiguration`
+### LiteRTLMConversationConfiguration
 
-Konfiguration für eine Conversation.
+Configuration for a conversation.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `maxOutputTokens` | `Int32` | Maximale Output-Token |
-| `samplerType` | `String` | Sampler-Typ |
-| `tools` | `Array` | Liste von Tools |
+| Property | Type | Description |
+|----------|------|-------------|
+| `maxOutputTokens` | `Int32` | Maximum output tokens |
+| `samplerType` | `String` | Sampler type |
+| `tools` | `Array` | List of tools |
 | `toolExecutionMode` | `String` | `'auto'`, `'required'`, `'disabled'` |
-| `maxImageDimension` | `Int` | Maximale Bildgröße |
-| `systemPrompt` | `String` | System-Prompt |
+| `maxImageDimension` | `Int` | Maximum image size |
+| `systemPrompt` | `String` | System prompt |
 
 ---
 
-### `LiteRTLMSamplerConfiguration`
+### LiteRTLMSamplerConfiguration
 
-Feinkörnige Sampler-Konfiguration.
+Fine-grained sampler configuration.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `temperature` | `Float` | Temperatur (0.0–2.0) |
-| `topK` | `Int32` | Top-K-Wert |
-| `topP` | `Float` | Top-P-Wert |
-| `seed` | `Int32` | Zufalls-Seed |
+| Property | Type | Description |
+|----------|------|-------------|
+| `temperature` | `Float` | Temperature (0.0–2.0) |
+| `topK` | `Int32` | Top-K value |
+| `topP` | `Float` | Top-P value |
+| `seed` | `Int32` | Random seed |
 | `samplerType` | `String` | `'greedy'`, `'balanced'`, `'creative'` |
 
-#### Statische Methoden
+#### Static Methods
 
 ```javascript
-// Greedy (deterministisch, niedrigste Temperatur)
+// Greedy (deterministic, lowest temperature)
 var greedyConfig = litertlm.createSamplerConfigProxy();
 greedyConfig.temperature = 0.0;
 greedyConfig.topK = 1;
 
-// Balanced (Standard)
+// Balanced (default)
 var balancedConfig = litertlm.createSamplerConfigProxy();
 balancedConfig.temperature = 0.7;
 
-// Creative (höchste Temperatur)
+// Creative (highest temperature)
 var creativeConfig = litertlm.createSamplerConfigProxy();
 creativeConfig.temperature = 1.5;
 creativeConfig.topP = 0.95;
@@ -735,38 +778,38 @@ creativeConfig.topP = 0.95;
 
 ---
 
-### `LiteRTLMContent`
+### LiteRTLMContent
 
-Ein Content-Objekt (Text, Bild oder Audio).
+A content object (text, image, or audio).
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
+| Property | Type | Description |
+|----------|------|-------------|
 | `type` | `String` | `'text'`, `'image'`, `'audio'` |
-| `text` | `String` | Textinhalt |
-| `imageData` | `Ti.Blob` | Bilddaten |
-| `audioData` | `Ti.Blob` | Audiodaten |
-| `audioFormat` | `String` | Audio-Format |
-| `maxDimension` | `Int` | Maximale Abmessung |
+| `text` | `String` | Text content |
+| `imageData` | `Ti.Blob` | Image data |
+| `audioData` | `Ti.Blob` | Audio data |
+| `audioFormat` | `String` | Audio format |
+| `maxDimension` | `Int` | Maximum dimension |
 
-**Hilfsfunktionen:**
+**Helper functions:**
 
 ```javascript
-// Text-Content
+// Text content
 var textContent = litertlm.createContentProxy({
     type: 'text',
-    text: 'Hallo Welt!'
+    text: 'Hello world!'
 });
 
-// Bild-Content
+// Image content
 var imageContent = litertlm.createContentProxy({
     type: 'image',
     imageData: imageBlob,
     maxDimension: 1024
 });
 
-// Audio-Content
+// Audio content
 var audioContent = litertlm.createContentProxy({
     type: 'audio',
     audioData: audioBlob,
@@ -776,53 +819,52 @@ var audioContent = litertlm.createContentProxy({
 
 ---
 
-### `LiteRTLMMessage`
+### LiteRTLMMessage
 
-Eine Message in einer Conversation.
+A message in a conversation.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
+| Property | Type | Description |
+|----------|------|-------------|
 | `role` | `String` | `'user'`, `'model'`, `'system'` |
-| `contents` | `Array` | Liste von Content-Objekten |
+| `contents` | `Array` | List of content objects |
 
 ---
 
-### `LiteRTLMTool`
+### LiteRTLMTool
 
-Ein Tool (Function) für das Tool Calling.
+A tool (function) for tool calling.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-----------|-----|--------------|
-| `name` | `String` | Funktionsname |
-| `description` | `String` | Funktionsbeschreibung |
-| `parameters` | `Array` | Parameter-Definitionen |
-| `executeCallback` | `Function` | Callback für die Ausführung |
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `String` | Function name |
+| `description` | `String` | Function description |
+| `parameters` | `Array` | Parameter definitions |
+| `executeCallback` | `Function` | Callback for execution |
 
 ---
 
-### `LiteRTLMModelInfo`
+### LiteRTLMModelInfo
 
-Informationen über ein Modell.
+Information about a model.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `name` | `String` | Modellname |
-| `displayName` | `String` | Anzeige-Name |
-| `url` | `String` | Download-URL |
-| `expectedSize` | `Int64` | Erwartete Größe |
-| `fileName` | `String` | Dateiname |
-| `status` | `String` | `'unknown'`, `'available'`, `'downloading'`, `'downloading'`, `'downloaded'`, `'error'` |
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `String` | Model name |
+| `displayName` | `String` | Display name |
+| `url` | `String` | Download URL |
+| `expectedSize` | `Int64` | Expected size |
+| `fileName` | `String` | File name |
+| `status` | `String` | `'unknown'`, `'available'`, `'downloading'`, `'downloaded'`, `'error'` |
 
-#### Statische Modelle
+#### Static Models
 
 ```javascript
-// Google Gemma 2B
 var gemma2b = litertlm.createModelInfo({
     name: 'gemma-2b-it',
     displayName: 'Gemma 2B It',
@@ -830,54 +872,45 @@ var gemma2b = litertlm.createModelInfo({
     expectedSize: 5000000000,
     fileName: 'gemma-2b-it'
 });
-
-// Google Gemma 7B
-var gemma7b = litertlm.createModelInfo({
-    name: 'gemma-7b-it',
-    displayName: 'Gemma 7B It',
-    url: 'https://...',
-    expectedSize: 15000000000,
-    fileName: 'gemma-7b-it'
-});
 ```
 
 ---
 
-### `LiteRTLMModelDownloader`
+### LiteRTLMModelDownloader
 
-Model-Downloader für das Herunterladen und Verwalten von Modellen.
+Model downloader for downloading and managing models.
 
-#### Eigenschaften
+#### Properties
 
-| Eigenschaft | Typ | Beschreibung |
-|-------------|-----|--------------|
-| `modelsDirectory` | `String` | Verzeichnis der Modelle |
+| Property | Type | Description |
+|----------|------|-------------|
+| `modelsDirectory` | `String` | Models directory |
 
-#### Methoden
+#### Methods
 
 ##### `download(modelInfo)` → `undefined`
 
-Startet den Download eines Modells.
+Starts downloading a model.
 
 ```javascript
 downloader.download(modelInfo);
 ```
 
-**Ereignisse:**
+**Events:**
 
-- `downloadstart` – Download gestartet
-- `downloadprogress` – Download-Fortschritt
+- `downloadstart` – Download started
+- `downloadprogress` – Download progress
   - `progress`: `Float` (0.0–1.0)
   - `bytesDownloaded`: `Int64`
   - `totalBytes`: `Int64`
-- `downloadcomplete` – Download abgeschlossen
+- `downloadcomplete` – Download completed
   - `modelInfo`: `LiteRTLMModelInfo`
-- `downloaderror` – Fehler beim Download
+- `downloaderror` – Download error
   - `message`: `String`
 
 ##### `downloadFrom(url, fileName?, expectedSize?)` → `undefined`
 
-Lädt ein Modell von einer URL herunter.
+Downloads a model from a URL.
 
 ```javascript
 downloader.downloadFrom(
@@ -889,7 +922,7 @@ downloader.downloadFrom(
 
 ##### `pause()` → `undefined`
 
-Pausiert den aktuellen Download.
+Pauses the current download.
 
 ```javascript
 downloader.pause();
@@ -897,7 +930,7 @@ downloader.pause();
 
 ##### `cancel()` → `undefined`
 
-Bricht den Download ab.
+Cancels the download.
 
 ```javascript
 downloader.cancel();
@@ -905,7 +938,7 @@ downloader.cancel();
 
 ##### `isDownloaded(modelInfo)` → `Boolean`
 
-Prüft, ob ein Modell heruntergeladen ist.
+Checks if a model is downloaded.
 
 ```javascript
 var exists = downloader.isDownloaded(modelInfo);
@@ -918,7 +951,7 @@ if (exists) {
 
 ##### `modelPath(modelInfo)` → `String`
 
-Gibt den Pfad zum Modell zurück.
+Returns the path to the model.
 
 ```javascript
 var path = downloader.modelPath(modelInfo);
@@ -927,7 +960,7 @@ console.log('Model path: ' + path);
 
 ##### `deleteModel(modelInfo)` → `undefined`
 
-Löscht ein heruntergeladenes Modell.
+Deletes a downloaded model.
 
 ```javascript
 downloader.deleteModel(modelInfo);
@@ -935,7 +968,7 @@ downloader.deleteModel(modelInfo);
 
 ##### `deleteModelByFileName(fileName)` → `undefined`
 
-Löscht ein Modell nach Dateinamen.
+Deletes a model by file name.
 
 ```javascript
 downloader.deleteModelByFileName('my-model.gguf');
@@ -943,28 +976,28 @@ downloader.deleteModelByFileName('my-model.gguf');
 
 ---
 
-## 🚀 Vollständiges Beispiel
+## Full Example
 
-Ein vollständiges Beispiel finden Sie im Ordner `example/app.js`. Es demonstriert:
+A complete example is available in the `example/app.js` directory. It demonstrates:
 
-- Modell-Download und -Verwaltung
-- Engine-Initialisierung
-- Einfache Textgenerierung
-- Streaming-Ausgabe
-- Conversation mit History
-- Tool Calling
-- Mehrmodale Eingabe (Vision)
-- Fehlerbehandlung
+- Model download and management
+- Engine initialization
+- Simple text generation
+- Streaming output
+- Conversation with history
+- Tool calling
+- Multimodal input (vision)
+- Error handling
 
 ---
 
-## 📡 Streaming API
+## Streaming API
 
-Das Streaming ermöglicht Token-für-Token-Ausgabe in Echtzeit:
+Streaming enables real-time token-by-token output:
 
 ```javascript
-// Einfaches Streaming
-session.generateStream('Erzähle mir eine Geschichte über einen Roboter.');
+// Simple streaming
+session.generateStream('Tell me a story about a robot.');
 
 session.addEventListener('streamstart', function(e) {
     console.log('Streaming started');
@@ -972,9 +1005,9 @@ session.addEventListener('streamstart', function(e) {
 });
 
 session.addEventListener('token', function(e) {
-    // Jedes Token wird einzeln empfangen
+    // Each token is received individually
     outputText += e.token;
-    label.text = outputText; // Live-Update im UI
+    label.text = outputText; // Live UI update
 });
 
 session.addEventListener('streamcomplete', function(e) {
@@ -989,31 +1022,31 @@ session.addEventListener('streamend', function(e) {
 
 ---
 
-## 🛠️ Tool Calling / Function Calling
+## Tool Calling / Function Calling
 
-LLMs können Funktionen Ihrer App aufrufen:
+LLMs can call functions in your app:
 
 ```javascript
-// 1. Tool definieren
+// 1. Define a tool
 var weatherTool = litertlm.createToolProxy({
     name: 'get_weather',
-    description: 'Holt das aktuelle Wetter für einen Ort',
+    description: 'Gets the current weather for a location',
     parameters: [{
         name: 'location',
         type: 'string',
-        description: 'Stadt oder Postleitzahl',
+        description: 'City or zip code',
         required: true
     }]
 });
 
-// 2. Callback setzen
+// 2. Set the callback
 weatherTool.executeCallback = function(args, callback) {
     Ti.API.info('Tool called with args: ' + JSON.stringify(args));
-    
-    // Externe API aufrufen
+
+    // Call external API
     var weatherData = getWeatherFromAPI(args.location);
-    
-    // Ergebnis zurückgeben
+
+    // Return the result
     callback({
         temperature: weatherData.temp,
         condition: weatherData.condition,
@@ -1021,20 +1054,20 @@ weatherTool.executeCallback = function(args, callback) {
     });
 };
 
-// 3. Tool an Conversation übergeben
+// 3. Pass tool to conversation
 var config = litertlm.createConversationConfigProxy({
-    systemPrompt: 'Du bist ein hilfreicher Wetter-Assistent.',
+    systemPrompt: 'You are a helpful weather assistant.',
     tools: [weatherTool],
     toolExecutionMode: 'auto'
 });
 
 engine.createConversationWithConfig(config);
 
-// 4. Antwort des Modells verarbeiten
+// 4. Process model response
 conversation.addEventListener('messagecomplete', function(e) {
     var message = e.message;
     if (message.role === 'model') {
-        // Modell hat möglicherweise Tools aufgerufen
+        // Model may have called tools
         console.log('Model response: ' + message.contents[0].text);
     }
 });
@@ -1042,23 +1075,23 @@ conversation.addEventListener('messagecomplete', function(e) {
 
 ---
 
-## 🖼️ Mehrmodale Eingabe (Vision, Audio)
+## Multimodal Input (Vision, Audio)
 
-### Bilderkennung (Vision)
+### Image Recognition (Vision)
 
 ```javascript
-// Bild aus der Fotomediathek auswählen
+// Select image from photo library
 var imageDialog = Ti.UI.createOptionDialog({
-    title: 'Bild auswählen',
-    options: ['Kamera', 'Fotomediathek', 'Abbrechen'],
+    title: 'Select Image',
+    options: ['Camera', 'Photo Library', 'Cancel'],
     cancel: 2,
-    destruction: 2
+    destructive: 2
 });
 
 imageDialog.show();
 imageDialog.addEventListener('click', function(e) {
     if (e.index === 0) {
-        // Kamera öffnen
+        // Open camera
         Ti.Media.openCamera({
             success: function(event) {
                 var imageContent = litertlm.createContentProxy({
@@ -1066,24 +1099,24 @@ imageDialog.addEventListener('click', function(e) {
                     imageData: event.media,
                     maxDimension: 1024
                 });
-                
+
                 var textContent = litertlm.createContentProxy({
                     type: 'text',
-                    text: 'Was siehst du auf diesem Bild?'
+                    text: 'What do you see in this image?'
                 });
-                
+
                 session.generateMultimodal([textContent, imageContent]);
             },
             cancel: function() {},
             error: function(error) {
-                alert('Kamera-Fehler: ' + error);
+                alert('Camera error: ' + error);
             }
         });
     }
 });
 ```
 
-### Audio-Eingabe
+### Audio Input
 
 ```javascript
 var audioContent = litertlm.createContentProxy({
@@ -1097,33 +1130,33 @@ session.generateMultimodal([audioContent]);
 
 ---
 
-## 🐛 Fehlerbehandlung
+## Error Handling
 
-Alle asynchronen Operationen können Fehler auslösen. Verwenden Sie immer Error-Listener:
+All asynchronous operations can trigger errors. Always use error listeners:
 
 ```javascript
-// Engine-Fehler
+// Engine errors
 engine.addEventListener('error', function(e) {
     Ti.API.error('Engine error: ' + e.message);
-    alert('Fehler: ' + e.message);
+    alert('Error: ' + e.message);
 });
 
-// Session-Fehler
+// Session errors
 session.addEventListener('generateerror', function(e) {
     Ti.API.error('Generation error: ' + e.message);
 });
 
-// Conversation-Fehler
+// Conversation errors
 conversation.addEventListener('messageerror', function(e) {
     Ti.API.error('Message error: ' + e.message);
 });
 
-// Streaming-Fehler
+// Streaming errors
 session.addEventListener('streamerror', function(e) {
     Ti.API.error('Streaming error: ' + e.message);
 });
 
-// Downloader-Fehler
+// Downloader errors
 downloader.addEventListener('downloaderror', function(e) {
     Ti.API.error('Download error: ' + e.message);
 });
@@ -1131,17 +1164,17 @@ downloader.addEventListener('downloaderror', function(e) {
 
 ---
 
-## 📥 Modell-Downloads
+## Model Downloads
 
-Das Modul unterstützt das Herunterladen von Modellen über HTTP/HTTPS:
+The module supports downloading models via HTTP/HTTPS:
 
 ```javascript
-// Downloader erstellen
+// Create downloader
 var downloader = litertlm.createDownloader({
     modelsDirectory: Ti.Filesystem.applicationDataDirectory + 'models/'
 });
 
-// Modell-Info erstellen
+// Create model info
 var modelInfo = litertlm.createModelInfo({
     name: 'gemma-2b-it',
     displayName: 'Gemma 2B It',
@@ -1150,62 +1183,62 @@ var modelInfo = litertlm.createModelInfo({
     fileName: 'gemma-2b-it.gguf'
 });
 
-// Download-Fortschritt anzeigen
+// Show download progress
 downloader.addEventListener('downloadprogress', function(e) {
     progressIndicator.value = e.progress * 100;
     label.text = 'Download: ' + Math.round(e.progress * 100) + '%';
 });
 
-// Download starten
+// Start download
 downloader.download(modelInfo);
 ```
 
 ---
 
-## ⚡ Performance-Tipps
+## Performance Tips
 
-1. **GPU-Backend verwenden**: Wenn verfügbar, ist das GPU-Backend deutlich schneller als CPU.
+1. **Use GPU backend**: When available, the GPU backend is significantly faster than CPU.
    ```javascript
-   engine.createEngineWithConfig({
+   litertlm.createEngineWithConfig({
        backend: 'gpu'
    });
    ```
 
-2. **Model-Last/Entlastung**: Entlasten Sie Modelle, wenn sie nicht benötigt werden.
+2. **Model load/unload**: Unload models when not needed to free memory.
    ```javascript
-   engine.unload(); // Speichern freige
-   // ... später
-   engine.load();   // Neu laden
+   engine.unload(); // Free memory
+   // ... later
+   engine.load();   // Reload
    ```
 
-3. **Cache-Verzeichnis**: Verwenden Sie ein Cache-Verzeichnis für schnellere Ladezeiten.
+3. **Cache directory**: Use a cache directory for faster load times.
    ```javascript
-   engine.createEngineWithConfig({
+   litertlm.createEngineWithConfig({
        cacheDir: Ti.Filesystem.applicationCachesDirectory
    });
    ```
 
-4. **Maximale Token-Anzahl**: Setzen Sie `maxTokens`, um die Speichernutzung zu begrenzen.
+4. **Maximum tokens**: Set `maxTokens` to limit memory usage.
 
-5. **Batch-Verarbeitung**: Für mehrere Anfragen, verwenden Sie Sessions statt neuer Conversations.
+5. **Batch processing**: For multiple requests, use sessions instead of creating new conversations.
 
 ---
 
-## 🔍 Debugging
+## Debugging
 
-Aktivieren Sie den Debug-Modus für detaillierte Protokollierung:
+Enable debug mode for detailed logging:
 
 ```javascript
 // In tiapp.xml
 <property name="ti.logging" type="bool">true</property>
 
-// Oder im Code
+// Or in code
 Ti.API.info = function(msg) {
     console.log('[LITERTLM] ' + msg);
 };
 ```
 
-Engine-Status überprüfen:
+Check engine status:
 
 ```javascript
 console.log('Status: ' + engine.status);
@@ -1215,36 +1248,62 @@ console.log('Last error: ' + engine.lastError);
 
 ---
 
-## 📌 Bekannte Einschränkungen
+## Known Limitations
 
-- **iOS nur**: Das Modul unterstützt derzeit nur iOS. Android ist in Planung.
-- **Arm64 only**: x86_64-Simulator wird nicht unterstützt.
-- **Modellgröße**: Modelle können 1–20 GB groß sein – genügend Speicherplatz einplanen.
-- **Speicherverbrauch**: Geladene Modelle benötigen ~2–4x ihre Dateigröße im Arbeitsspeicher.
-- **Kein Background-Modus**: LLM-Inferenz läuft nur im Vordergrund.
-- **Kein Android**: Android-Unterstützung ist in der Roadmap.
+- **arm64 only on iOS**: x86_64 simulator is not supported.
+- **Model size**: Models can be 1–20 GB in size — ensure sufficient storage space.
+- **Memory usage**: Loaded models require ~2–4x their file size in RAM.
+- **No background mode**: LLM inference only runs in the foreground.
+- **XNNPack cache warning on Android**: A non-fatal warning about weight cache persistence may appear on Android. This does not affect inference quality, only the cold-start performance of the cache.
 
 ---
 
-## 🗺️ Roadmap
+## Platform Differences
 
-- [ ] **Android-Unterstützung**
-- [ ] **Echtzeit-Spracherkennung (STT)**
+The module provides a unified JavaScript API across iOS and Android, but there are a few platform-specific differences:
+
+### Model Paths
+
+On Android, Titanium `appdata://` and `appdata-private://` URLs are automatically resolved to filesystem paths. You can use either format:
+
+```javascript
+// Both work on Android:
+litertlm.createEngine({ modelPath: Ti.Filesystem.applicationDataDirectory + 'models/gemma.gguf' });
+litertlm.createEngine({ modelPath: '/data/data/com.app/files/models/gemma.gguf' });
+```
+
+On iOS, use standard file paths or Titanium file URLs.
+
+### Tool Execution
+
+On Android, tool execution callbacks are invoked on the UI thread with a 30-second timeout. Long-running tool callbacks may time out.
+
+### Session API
+
+The Session API (`generate`, `generateStream`, `collectStream`) is available on iOS. On Android, the Conversation API (`send`, `sendStream`) is the primary interface.
+
+---
+
+## Roadmap
+
+- [x] **iOS support**
+- [x] **Android support**
+- [ ] **Real-time speech recognition (STT)**
 - [ ] **Text-to-Speech (TTS)**
 - [ ] **RAG (Retrieval-Augmented Generation)**
-- [ ] **Multi-Modell-Unterstützung**
-- [ ] **Web-View-Integration**
-- [ ] **CI/CD-Pipeline**
-- [ ] **Umfassende Tests**
+- [ ] **Multi-model support**
+- [ ] **Web-View integration**
+- [ ] **CI/CD pipeline**
+- [ ] **Comprehensive tests**
 
 ---
 
-## 📄 Lizenz
+## License
 
-Dieses Projekt ist unter der [Apache License 2.0](LICENSE) lizenziert.
+This project is licensed under the [Apache License 2.0](LICENSE).
 
 ```
-Copyright 2026 Marc Bender
+Copyright 2026 mbender74
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1261,36 +1320,30 @@ limitations under the License.
 
 ---
 
-## 👤 Autor
+## Author
 
-**Marc Bender**
+**mbender74**
 
 - GitHub: [@marcbender](https://github.com/marcbender)
-- E-Mail: marcbender@example.com
+- Email: [marc_bender@icloud.com](mailto:marc_bender@icloud.com)
 
 ---
 
-## 🤝 Beiträge
+## Contributing
 
-Beiträge sind willkommen! Bitte erstellen Sie ein Issue oder einen Pull Request.
+Contributions are welcome! Please create an issue or pull request.
 
-1. Forken Sie das Repository
-2. Erstellen Sie einen Feature-Branch (`git checkout -b feature/mein-feature`)
-3. Committen Sie Ihre Änderungen (`git commit -am 'Add new feature'`)
-4. Pushen Sie zum Branch (`git push origin feature/mein-feature`)
-5. Erstellen Sie einen Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Create a pull request
 
 ---
 
-## 📞 Support
+## Support
 
-Bei Fragen oder Problemen:
+For questions or issues:
 
 - [GitHub Issues](https://github.com/marcbender/TitaniumLiteRTLM/issues)
 - [GitHub Discussions](https://github.com/marcbender/TitaniumLiteRTLM/discussions)
-- E-Mail: marcbender@example.com
-
----
-
-**Viel Spaß beim Programmieren mit TitaniumLiteRTLM! 🚀**
- 

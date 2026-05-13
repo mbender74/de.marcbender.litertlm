@@ -1,7 +1,8 @@
 # Build artifacts
 ios/build/
 ios/dist/
-ios/dist/
+android/build/
+android/dist/
 
 # Test app build artifacts
 example/testApp/build/
@@ -21,3 +22,10 @@ DerivedData/
 # Node modules (if applicable)
 node_modules/
 
+# Binary framework symlinks and build artifacts
+ios/platform/LiteRTLM.xcframework/ios-arm64-maccatalyst/CLiteRTLM.framework/Headers/Headers
+ios/platform/LiteRTLM.xcframework/ios-arm64-maccatalyst/CLiteRTLM.framework/Modules/Modules
+ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/Headers/Headers
+ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/Modules/Modules
+ios/create_framework_symlink.sh
+ios/platform/README.md
