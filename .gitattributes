@@ -1,3 +1,5 @@
+*.so filter=lfs diff=lfs merge=lfs -text
+*.dylib filter=lfs diff=lfs merge=lfs -text
 /ios/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
 /ios/platform/LiteRTLM.xcframework/ios-arm64/CLiteRTLM.framework/libGemmaModelConstraintProvider.dylib filter=lfs diff=lfs merge=lfs -text
 /ios/dist/de.marcbender.litertlm-iphone-1.0.0.zip filter=lfs diff=lfs merge=lfs -text
@@ -25,3 +27,5 @@
 /android/platform/android/jniLibs/x86_64/libGemmaModelConstraintProvider.so filter=lfs diff=lfs merge=lfs -text
 /android/platform/android/jniLibs/x86_64/libLiteRtGpuAccelerator.so filter=lfs diff=lfs merge=lfs -text
 /android/platform/android/jniLibs/x86_64/liblitertlm_jni.so filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/ios-arm64-maccatalyst/CLiteRTLM.framework/Versions/A/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
+/ios/platform/LiteRTLM.xcframework/macos-arm64/CLiteRTLM.framework/Versions/A/CLiteRTLM filter=lfs diff=lfs merge=lfs -text
