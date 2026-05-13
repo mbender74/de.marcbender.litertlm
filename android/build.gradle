@@ -1,5 +1,61 @@
+apply plugin: 'kotlin-android'
+
+android {
+	compileSdkVersion 35
+	defaultConfig {
+		minSdkVersion 24
+		targetSdkVersion 35
+	}
+}
 
 dependencies {
-	// Add the module's library dependencies here.
-	// See:  https://developer.android.com/studio/build/dependencies
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+	implementation 'com.google.code.gson:gson:2.10.1'
+	implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+	implementation 'org.jetbrains.kotlin:kotlin-reflect:1.9.24'
+}
+
+// Patch generated Kroll C++ bindings to remove JetBrains annotations
+// from JNI method signatures. The Kroll annotation processor incorrectly
+// includes @NotNull/@Nullable annotations in JNI descriptors, which
+// causes NoSuchMethodError at runtime.
+def patchKrollBindings() {
+	def genDir = file("${project.projectDir}/build/ti-generated/jni")
+	if (!genDir.exists()) {
+		logger.warn("patchKrollBindings: directory not found: ${genDir}")
+		return
+	}
+	def patched = 0
+	genDir.eachFileMatch(~/.*\.cpp/) { f ->
+		def text = f.text
+		def newText = text
+			.replace('@org/jetbrains/annotations/NotNull ', '')
+			.replace('@org/jetbrains/annotations/Nullable ', '')
+			.replace('@org/jetbrains/annotations/NotNull)', ')')
+			.replace('@org/jetbrains/annotations/Nullable)', ')')
+		if (text != newText) {
+			f.text = newText
+			patched++
+		}
+	}
+	if (patched > 0) {
+		logger.lifecycle("Patched JetBrains annotations in ${patched} generated binding file(s)")
+	} else {
+		logger.lifecycle("patchKrollBindings: no changes needed")
+	}
+}
+
+afterEvaluate {
+	tasks.named('kaptReleaseKotlin') {
+		finalizedBy('patchKrollBindings')
+	}
+	tasks.register('patchKrollBindings') {
+		dependsOn 'kaptReleaseKotlin'
+		doLast {
+			patchKrollBindings()
+		}
+	}
+	tasks.matching { it.name.startsWith('buildNdkBuild') }.configureEach {
+		dependsOn 'patchKrollBindings'
+	}
 }
