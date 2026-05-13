@@ -1,0 +1,649 @@
+<h1>TitaniumLiteRTLM – API-Referenz</h1>
+
+<p><strong>Modul-ID:</strong> <code>de.marcbender.litertlm</code><br/><strong>Version:</strong> 1.0.0<br/><strong>Plattform:</strong> iOS (arm64)<br/><strong>Titanium SDK:</strong> 13.2.0.GA+</p>
+
+<hr/>
+
+<h2>Übersicht</h2>
+
+<p>Das <code>de.marcbender.litertlm</code>-Modul packt das vollständige <a href="https://github.com/google/litert">Google LiteRTLM-Swift-SDK</a> als Titanium-Modul ein. Es ermöglicht die Ausführung von Large Language Models (LLMs) direkt auf dem iOS-Gerät – ohne Netzwerkverbindung, ohne Cloud-Abhängigkeiten.</p>
+
+<h3>Kernkonzepte</h3>
+
+<p>| Konzept | Beschreibung |
+|---------|--------------|
+| <strong>Engine</strong> | Lädt ein Modell und verwaltet die Inferenz-Engine. Eine Engine kann mehrere Sessions/Conversations enthalten. |
+| <strong>Session</strong> | Eine einzelne Inferenz-Anfrage (ein Text → eine Antwort). Zustandslos. |
+| <strong>Conversation</strong> | Eine mehrfache Unterhaltung mit History, System-Prompt und Tool Calling. Zustandbehaftet. |
+| <strong>Downloader</strong> | Lädt Modelle von HuggingFace oder anderen URLs herunter und verwaltet sie lokal. |
+| <strong>Streaming</strong> | Token-für-Token-Ausgabe in Echtzeit über Events. |
+| <strong>Tool Calling</strong> | Das LLM kann Funktionen Ihrer App aufrufen und die Ergebnisse nutzen. |</p>
+
+<hr/>
+
+<h2>Installation</h2>
+
+<h3>Voraussetzungen</h3>
+
+<ul><li>iOS 17.0+</li><li>Titanium SDK 13.2.0.GA oder neuer</li><li>Xcode 15.0+</li><li>Apple Silicon Mac oder iPhone/iPad (arm64)</li></ul>
+
+<h3>Modul installieren</h3>
+
+<ol><li><p>Bauen Sie das Modul:
+<code>bash
+cd ios
+ti build -p ios --build-only
+</code></p></li><li><p>Das ZIP entsteht im Ordner <code>ios/dist/</code>. Kopieren Sie es in Ihr Projekt:
+<code>bash
+cp dist/de.marcbender.litertlm-iphone-1.0.0.zip /path/to/your-project/modules/
+</code></p></li></ol>
+
+<h3>tiapp.xml konfigurieren</h3>
+
+<p>Fügen Sie das Modul in Ihre <code>tiapp.xml</code> ein:</p>
+
+<p><code>xml
+&lt;modules&gt;
+    &lt;module version=&quot;1.0.0&quot; platform=&quot;ios&quot;&gt;de.marcbender.litertlm&lt;/module&gt;
+&lt;/modules&gt;
+</code></p>
+
+<h3>Berechtigungen in tiapp.xml</h3>
+
+<p>Für Kamera, Mikrofon und Fotomediathek:</p>
+
+<p><code>xml
+&lt;property name=&quot;ti.android.bundle.url&quot; type=&quot;string&quot;&gt;&lt;/property&gt;
+&lt;ios&gt;
+    &lt;plist&gt;
+        &lt;dict&gt;
+            &lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
+            &lt;string&gt;Bilder für die KI-Erkennung aufnehmen&lt;/string&gt;
+            &lt;key&gt;NSMicrophoneUsageDescription&lt;/key&gt;
+            &lt;string&gt;Spracheingabe für die KI&lt;/string&gt;
+            &lt;key&gt;NSPhotoLibraryUsageDescription&lt;/key&gt;
+            &lt;string&gt;Bilder aus der Fotomediathek auswählen&lt;/string&gt;
+        &lt;/dict&gt;
+    &lt;/plist&gt;
+&lt;/ios&gt;
+</code></p>
+
+<hr/>
+
+<h2>JavaScript-API-Referenz</h2>
+
+<h3>Zugriff auf das Modul</h3>
+
+<p><code>javascript
+var litertlm = require(&#39;de.marcbender.litertlm&#39;);
+</code></p>
+
+<h3>Methoden des Hauptmoduls</h3>
+
+<h4><code>litertlm.getVersion()</code> → <code>String</code></h4>
+
+<p>Gibt die Versionsnummer des Moduls zurück.</p>
+
+<p><code>javascript
+var version = litertlm.getVersion(); // &quot;1.0.0&quot;
+</code></p>
+
+<h4><code>litertlm.createEngine(arguments)</code></h4>
+
+<p>Erstellt und lädt eine Engine mit einem Modell.</p>
+
+<p><strong>Parameter (<code>arguments</code>):</strong></p>
+
+<p>| Schlüssel | Typ | Standard | Beschreibung |
+|-----------|-----|----------|--------------|
+| <code>modelPath</code> | <code>String</code> | <em>erforderlich</em> | Pfad zur Modell-Datei oder -Verzeichnis |
+| <code>backend</code> | <code>String</code> | <code>&#39;cpu&#39;</code> | <code>&#39;cpu&#39;)</code> oder <code>&#39;gpu&#39;</code> |
+| <code>maxTokens</code> | <code>Int32</code> | <code>0</code> | Maximale Anzahl generierter Tokens (0 = unbegrenzt) |
+| <code>cacheDir</code> | <code>String</code> | <code>null</code> | Cache-Verzeichnis für das Modell |
+| <code>benchmarkEnabled</code> | <code>Boolean</code> | <code>false</code> | Leistungsmessung aktivieren |
+| <code>logLevel</code> | <code>String</code> | <code>&#39;warning&#39;</code> | <code>&#39;error&#39;</code>, <code>&#39;warning&#39;</code>, <code>&#39;info&#39;</code>, <code>&#39;fatal&#39;</code>, <code>&#39;silent&#39;</code> |</p>
+
+<p><strong>Ereignisse:</strong></p>
+
+<p>| Name | Beschreibung | Payload |
+|------|--------------|---------|
+| <code>enginecreated</code> | Engine erfolgreich geladen | <code>{ engine: LiteRTLMEngine }</code> |</p>
+
+<p><strong>Beispiel:</strong></p>
+
+<p><code></code>`javascript
+litertlm.createEngine({
+    modelPath: &#39;/path/to/model.gguf&#39;,
+    backend: &#39;gpu&#39;,
+    maxTokens: 1024
+});</p>
+
+<p>litertlm.addEventListener(&#39;enginecreated&#39;, function(e) {
+    var engine = e.engine;
+    console.log(&#39;Status: &#39; + engine.status);
+});
+<code></code>`</p>
+
+<h4><code>litertlm.createEngineWithConfig(config)</code></h4>
+
+<p>Erstellt eine Engine mit einem Konfigurations-Objekt (siehe <code>createEngineConfigProxy</code>).</p>
+
+<p><code>javascript
+var config = litertlm.createEngineConfigProxy({
+    modelPath: &#39;/path/to/model&#39;,
+    backend: &#39;gpu&#39;
+});
+litertlm.createEngineWithConfig(config);
+</code></p>
+
+<h4><code>litertlm.createEngineConfigProxy(arguments)</code> → <code>LiteRTLMEngineConfiguration</code></h4>
+
+<p>Erstellt ein Engine-Konfigurations-Objekt.</p>
+
+<p><strong>Parameter (<code>arguments</code>):</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>modelPath</code> | <code>String</code> | Pfad zum Modell |
+| <code>backend</code> | <code>String</code> | <code>&#39;cpu&#39;</code> oder <code>&#39;gpu&#39;</code> |
+| <code>maxTokens</code> | <code>Int32</code> | Maximale Tokens |
+| <code>cacheDir</code> | <code>String</code> | Cache-Verzeichnis |
+| <code>benchmarkEnabled</code> | <code>Boolean</code> | Benchmarking aktivieren |
+| <code>logLevel</code> | <code>String</code> | Log-Stufe |
+| <code>visionBackend</code> | <code>String</code> | Backend für Vision/Bilder |
+| <code>audioBackend</code> | <code>String</code> | Backend für Audio |</p>
+
+<h4><code>litertlm.createSessionConfigProxy(arguments)</code> → <code>LiteRTLMSessionConfiguration</code></h4>
+
+<p>Erstellt eine Session-Konfiguration.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>maxOutputTokens</code> | <code>Int32</code> | Maximale Output-Token |
+| <code>samplerType</code> | <code>String</code> | <code>&#39;greedy&#39;</code>, <code>&#39;balanced&#39;</code>, <code>&#39;creative&#39;</code> |</p>
+
+<h4><code>litertlm.createConversationConfigProxy(arguments)</code> → <code>LiteRTLMConversationConfiguration</code></h4>
+
+<p>Erstellt eine Conversation-Konfiguration.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>maxOutputTokens</code> | <code>Int32</code> | Maximale Output-Token |
+| <code>samplerType</code> | <code>String</code> | Sampler-Typ |
+| <code>tools</code> | <code>Array</code> | Liste von <code>LiteRTLMTool</code>-Objekten |
+| <code>toolExecutionMode</code> | <code>String</code> | <code>&#39;auto&#39;</code>, <code>&#39;required&#39;</code>, <code>&#39;disabled&#39;</code> |
+| <code>maxImageDimension</code> | <code>Int</code> | Maximale Bildgröße in Pixel |
+| <code>systemPrompt</code> | <code>String</code> | System-Prompt für die Conversation |</p>
+
+<h4><code>litertlm.createSamplerConfigProxy(arguments)</code> → <code>LiteRTLMSamplerConfiguration</code></h4>
+
+<p>Erstellt eine Sampler-Konfiguration.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>temperature</code> | <code>Double</code> | 0.0–2.0 (niedrig = deterministisch, hoch = kreativ) |
+| <code>topK</code> | <code>Int32</code> | Top-K-Wert (nur die besten K Tokens) |
+| <code>topP</code> | <code>Double</code> | Nukleare Abtastung (0.0–1.0) |
+| <code>seed</code> | <code>Int32</code> | Zufalls-Seed für Reproduzierbarkeit |
+| <code>samplerType</code> | <code>String</code> | <code>&#39;greedy&#39;</code>, <code>&#39;balanced&#39;</code>, <code>&#39;creative&#39;</code> |</p>
+
+<h4><code>litertlm.createContentProxy(arguments)</code> → <code>LiteRTLMContent</code></h4>
+
+<p>Erstellt ein Content-Objekt.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>type</code> | <code>String</code> | <code>&#39;text&#39;</code>, <code>&#39;image&#39;</code>, <code>&#39;audio&#39;</code> |
+| <code>text</code> | <code>String</code> | Textinhalt |
+| <code>imageData</code> | <code>Ti.Blob</code> | Bilddaten |
+| <code>audioData</code> | <code>Ti.Blob</code> | Audiodaten |
+| <code>audioFormat</code> | <code>String</code> | Audio-Format (z.B. <code>&#39;wav&#39;</code>, <code>&#39;mp3&#39;</code>) |
+| <code>maxDimension</code> | <code>Int</code> | Maximale Bildabmessung |</p>
+
+<h4><code>litertlm.createMessageProxy(arguments)</code> → <code>LiteRTLMMessage</code></h4>
+
+<p>Erstellt eine Message (Nutzlast) für eine Conversation.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>role</code> | <code>String</code> | <code>&#39;user&#39;</code>, <code>&#39;model&#39;</code>, <code>&#39;system&#39;</code> |
+| <code>contents</code> | <code>Array</code> | Liste von <code>LiteRTLMContent</code>-Objekten |</p>
+
+<h4><code>litertlm.createToolProxy(arguments)</code> → <code>LiteRTLMTool</code></h4>
+
+<p>Erstellt ein Tool (Function) für das Tool Calling.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>name</code> | <code>String</code> | Name der Funktion |
+| <code>description</code> | <code>String</code> | Beschreibung, was die Funktion tut |
+| <code>parameters</code> | <code>Array</code> | Parameter-Definitionen |</p>
+
+<p>Jeder Parameter ist ein Objekt mit:</p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>name</code> | <code>String</code> | Name des Parameters |
+| <code>type</code> | <code>String</code> | <code>&#39;string&#39;</code>, <code>&#39;number&#39;</code>, <code>&#39;boolean&#39;</code>, <code>&#39;object&#39;</code>, <code>&#39;array&#39;</code> |
+| <code>description</code> | <code>String</code> | Beschreibung des Parameters |
+| <code>required</code> | <code>Boolean</code> | Ob der Parameter erforderlich ist |</p>
+
+<h4><code>litertlm.createDownloader(arguments)</code> → <code>LiteRTLMModelDownloader</code></h4>
+
+<p>Erstellt einen Model-Downloader.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>modelsDirectory</code> | <code>String</code> | Verzeichnis zum Speichern von Modellen |</p>
+
+<p><strong>Ereignisse:</strong></p>
+
+<p>| Name | Beschreibung | Payload |
+|------|--------------|---------|
+| <code>downloadprogress</code> | Download-Fortschritt | <code>{ progress: Float, bytesDownloaded: Int64, totalBytes: Int64 }</code> |
+| <code>downloadcomplete</code> | Download abgeschlossen | <code>{ modelInfo: LiteRTLMModelInfo }</code> |
+| <code>downloaderror</code> | Fehler beim Download | <code>{ message: String }</code> |</p>
+
+<h4><code>litertlm.createModelInfo(arguments)</code> → <code>LiteRTLMModelInfo</code></h4>
+
+<p>Erstellt ein ModelInfo-Objekt.</p>
+
+<p><strong>Parameter:</strong></p>
+
+<p>| Schlüssel | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>name</code> | <code>String</code> | Interner Modellname |
+| <code>displayName</code> | <code>String</code> | Anzeige-Name |
+| <code>url</code> | <code>String</code> | Download-URL |
+| <code>expectedSize</code> | <code>Int64</code> | Erwartete Dateigröße in Bytes |
+| <code>fileName</code> | <code>String</code> | Dateiname nach dem Download |</p>
+
+<hr/>
+
+<h3>LiteRTLMEngine</h3>
+
+<p>Repräsentiert eine geladene LLM-Engine.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>status</code> | <code>String</code> | <code>&#39;notLoaded&#39;</code>, <code>&#39;loaded&#39;</code>, <code>&#39;loading&#39;</code>, <code>&#39;error&#39;</code> |
+| <code>isReady</code> | <code>Boolean</code> | Ob die Engine bereit ist |
+| <code>lastError</code> | <code>String</code> | Fehlermeldung oder <code>null</code> |</p>
+
+<h4>Methoden</h4>
+
+<h5><code>engine.load()</code></h5>
+
+<p>Lädt das Modell in den Speicher.</p>
+
+<h5><code>engine.unload()</code></h5>
+
+<p>Entlastet das Modell aus dem Speicher.</p>
+
+<h5><code>engine.createSession(config?)</code></h5>
+
+<p>Erstellt eine neue Session.</p>
+
+<p><strong>Ereignisse:</strong> <code>sessioncreated</code> mit <code>{ session: LiteRTLMSession }</code></p>
+
+<h5><code>engine.createSessionWithConfig(config)</code></h5>
+
+<p>Erstellt eine Session mit Konfiguration.</p>
+
+<h5><code>engine.createConversation(config?)</code></h5>
+
+<p>Erstellt eine neue Conversation.</p>
+
+<p><strong>Ereignisse:</strong> <code>conversationcreated</code> mit <code>{ conversation: LiteRTLMConversation }</code></p>
+
+<h5><code>engine.createConversationWithConfig(config)</code></h5>
+
+<p>Erstellt eine Conversation mit Konfiguration.</p>
+
+<hr/>
+
+<h3>LiteRTLMSession</h3>
+
+<p>Repräsentiert eine einzelne Inferenz-Session.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>isActive</code> | <code>Boolean</code> | Ob die Session aktiv ist |</p>
+
+<h4>Methoden</h4>
+
+<h5><code>session.generate(text, config?)</code></h5>
+
+<p>Generiert Text als Antwort.</p>
+
+<p><strong>Ereignisse:</strong></p>
+
+<p>| Name | Beschreibung | Payload |
+|------|--------------|---------|
+| <code>generateready</code> | Generierung abgeschlossen | <code>{ result: String, benchmarkInfo: Object }</code> |
+| <code>generateerror</code> | Fehler bei der Generierung | <code>{ message: String }</code> |</p>
+
+<h5><code>session.generateMultimodal(contents, config?)</code></h5>
+
+<p>Generiert eine Antwort auf mehrmodale Eingabe (Text + Bilder + Audio).</p>
+
+<p><strong>Ereignisse:</strong> wie <code>generate</code>, aber mit multimodaler Verarbeitung.</p>
+
+<h5><code>session.generateStream(text, config?)</code></h5>
+
+<p>Startet Streaming-Generierung.</p>
+
+<p><strong>Ereignisse:</strong></p>
+
+<p>| Name | Beschreibung | Payload |
+|------|--------------|---------|
+| <code>streamstart</code> | Streaming gestartet | <code>{ sessionId: String }</code> |
+| <code>token</code> | Neues Token | <code>{ token: String }</code> |
+| <code>streamcomplete</code> | Streaming abgeschlossen | <code>{ result: String, benchmarkInfo: Object }</code> |
+| <code>streamerror</code> | Fehler beim Streaming | <code>{ message: String }</code> |
+| <code>streamend</code> | Streaming beendet | – |</p>
+
+<h5><code>session.collectStream(text, config?)</code></h5>
+
+<p>Sammelt alle Tokens einer Streaming-Antwort in einem Ergebnis.</p>
+
+<h5><code>session.close()</code></h5>
+
+<p>Schließt die Session.</p>
+
+<hr/>
+
+<h3>LiteRTLMConversation</h3>
+
+<p>Repräsentiert eine Conversation mit History.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>isActive</code> | <code>Boolean</code> | Ob die Conversation aktiv ist |
+| <code>history</code> | <code>Array</code> | Liste von <code>LiteRTLMMessage</code>-Objekten |</p>
+
+<h4>Methoden</h4>
+
+<h5><code>conversation.send(message, config?)</code></h5>
+
+<p>Sendet eine Nachricht und erhält eine Antwort.</p>
+
+<p><strong>Ereignisse:</strong></p>
+
+<p>| Name | Beschreibung | Payload |
+|------|--------------|---------|
+| <code>messagecomplete</code> | Antwort vollständig | <code>{ message: LiteRTLMMessage }</code> |
+| <code>messageerror</code> | Fehler beim Senden | <code>{ message: String }</code> |</p>
+
+<h5><code>conversation.sendMultimodal(message, config?)</code></h5>
+
+<p>Sendet eine mehrmodale Nachricht.</p>
+
+<h5><code>conversation.sendStream(message, config?)</code></h5>
+
+<p>Sendet eine Nachricht mit Streaming-Antwort.</p>
+
+<p><strong>Ereignisse:</strong> wie bei <code>generateStream</code>.</p>
+
+<h5><code>conversation.collectStream(message, config?)</code></h5>
+
+<p>Sammelt alle Tokens einer Streaming-Antwort.</p>
+
+<h5><code>conversation.cancel()</code></h5>
+
+<p>Bricht die aktuelle Anfrage ab.</p>
+
+<h5><code>conversation.close()</code></h5>
+
+<p>Schließt die Conversation.</p>
+
+<h5><code>conversation.getHistory()</code> → <code>Array</code></h5>
+
+<p>Gibt den Conversation-Verlauf zurück.</p>
+
+<hr/>
+
+<h3>LiteRTLMContent</h3>
+
+<p>Ein Content-Objekt (Text, Bild oder Audio).</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>type</code> | <code>String</code> | <code>&#39;text&#39;</code>, <code>&#39;image&#39;</code>, <code>&#39;audio&#39;</code> |
+| <code>text</code> | <code>String</code> | Textinhalt |
+| <code>imageData</code> | <code>Ti.Blob</code> | Bilddaten |
+| <code>audioData</code> | <code>Ti.Blob</code> | Audiodaten |
+| <code>audioFormat</code> | <code>String</code> | Audio-Format |
+| <code>maxDimension</code> | <code>Int</code> | Maximale Abmessung |</p>
+
+<hr/>
+
+<h3>LiteRTLMMessage</h3>
+
+<p>Eine Message in einer Conversation.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>role</code> | <code>String</code> | <code>&#39;user&#39;</code>, <code>&#39;model&#39;</code>, <code>&#39;system&#39;</code> |
+| <code>contents</code> | <code>Array</code> | Liste von Content-Objekten |</p>
+
+<hr/>
+
+<h3>LiteRTLMTool</h3>
+
+<p>Ein Tool (Function) für das Tool Calling.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-----------|-----|--------------|
+| <code>name</code> | <code>String</code> | Funktionsname |
+| <code>description</code> | <code>String</code> | Funktionsbeschreibung |
+| <code>parameters</code> | <code>Array</code> | Parameter-Definitionen |
+| <code>executeCallback</code> | <code>Function</code> | Callback für die Ausführung |</p>
+
+<h4>executeCallback</h4>
+
+<p>Der Callback wird aufgerufen, wenn das LLM das Tool aufruft:</p>
+
+<p><code></code>`javascript
+tool.executeCallback = function(args, callback) {
+    // args: Parameter, die das LLM übermittelt hat
+    // callback: Funktion, um das Ergebnis zurückzugeben</p>
+
+<pre><code>var result = { temperature: 22, condition: &#39;sunny&#39; };
+callback(result);</code></pre>
+
+<p>};
+<code></code>`</p>
+
+<hr/>
+
+<h3>LiteRTLMModelInfo</h3>
+
+<p>Informationen über ein Modell.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>name</code> | <code>String</code> | Modellname |
+| <code>displayName</code> | <code>String</code> | Anzeige-Name |
+| <code>url</code> | <code>String</code> | Download-URL |
+| <code>expectedSize</code> | <code>Int64</code> | Erwartete Größe in Bytes |
+| <code>fileName</code> | <code>String</code> | Dateiname |</p>
+
+<hr/>
+
+<h3>LiteRTLMModelDownloader</h3>
+
+<p>Model-Downloader für das Herunterladen und Verwalten von Modellen.</p>
+
+<h4>Eigenschaften</h4>
+
+<p>| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| <code>modelsDirectory</code> | <code>String</code> | Verzeichnis der Modelle |</p>
+
+<h4>Methoden</h4>
+
+<h5><code>downloader.download(modelInfo)</code></h5>
+
+<p>Startet den Download eines Modells.</p>
+
+<h5><code>downloader.downloadFrom(url, fileName?, expectedSize?)</code></h5>
+
+<p>Lädt ein Modell von einer URL herunter.</p>
+
+<h5><code>downloader.pause()</code></h5>
+
+<p>Pausiert den aktuellen Download.</p>
+
+<h5><code>downloader.cancel()</code></h5>
+
+<p>Bricht den Download ab.</p>
+
+<h5><code>downloader.isDownloaded(modelInfo)</code> → <code>Boolean</code></h5>
+
+<p>Prüft, ob ein Modell heruntergeladen ist.</p>
+
+<h5><code>downloader.modelPath(modelInfo)</code> → <code>String</code></h5>
+
+<p>Gibt den Pfad zum Modell zurück.</p>
+
+<h5><code>downloader.deleteModel(modelInfo)</code></h5>
+
+<p>Löscht ein heruntergeladenes Modell.</p>
+
+<h5><code>downloader.deleteModelByFileName(fileName)</code></h5>
+
+<p>Löscht ein Modell nach Dateinamen.</p>
+
+<hr/>
+
+<h2>Nutzungshinweise</h2>
+
+<h3>Modell-Download</h3>
+
+<p>Das Modul unterstützt den Download von Modellen über HTTP/HTTPS von HuggingFace oder anderen Quellen:</p>
+
+<p><code></code>`javascript
+var downloader = litertlm.createDownloader({
+    modelsDirectory: Ti.Filesystem.applicationStorageDirectory + &#39;models/&#39;
+});</p>
+
+<p>var modelInfo = litertlm.createModelInfo({
+    name: &#39;gemma-4-e2b&#39;,
+    displayName: &#39;Gemma 4 E2B&#39;,
+    url: &#39;https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm&#39;,
+    expectedSize: 2583085056,
+    fileName: &#39;gemma-4-E2B-it.litertlm&#39;
+});</p>
+
+<p>downloader.download(modelInfo);
+<code></code>`</p>
+
+<h3>Stream-Verarbeitung</h3>
+
+<p><code></code>`javascript
+session.generateStream(&#39;Erzählen Sie eine Geschichte.&#39;);</p>
+
+<p>session.addEventListener(&#39;token&#39;, function(e) {
+    // Jedes Token wird einzeln empfangen
+    outputText += e.token;
+    label.text = outputText; // Live-Update im UI
+});</p>
+
+<p>session.addEventListener(&#39;streamcomplete&#39;, function(e) {
+    console.log(&#39;Antwort: &#39; + e.result);
+});
+<code></code>`</p>
+
+<h3>Tool Calling</h3>
+
+<p><code></code>`javascript
+var tool = litertlm.createToolProxy({
+    name: &#39;get_weather&#39;,
+    description: &#39;Holt das aktuelle Wetter für eine Stadt&#39;,
+    parameters: [{
+        name: &#39;city&#39;,
+        type: &#39;string&#39;,
+        description: &#39;Stadtnamen&#39;,
+        required: true
+    }]
+});</p>
+
+<p>tool.executeCallback = function(args, callback) {
+    var weather = getWeatherFromAPI(args.city);
+    callback(weather);
+};</p>
+
+<p>var config = litertlm.createConversationConfigProxy({
+    systemPrompt: &#39;Sie sind ein hilfreicher Assistent.&#39;,
+    tools: [tool],
+    toolExecutionMode: &#39;auto&#39;
+});</p>
+
+<p>engine.createConversationWithConfig(config);
+<code></code>`</p>
+
+<h3>Fehlerbehandlung</h3>
+
+<p><code></code>`javascript
+// Engine-Fehler
+engine.addEventListener(&#39;error&#39;, function(e) {
+    Ti.API.error(&#39;Engine error: &#39; + e.message);
+});</p>
+
+<p>// Session-Fehler
+session.addEventListener(&#39;generateerror&#39;, function(e) {
+    Ti.API.error(&#39;Generation error: &#39; + e.message);
+});</p>
+
+<p>// Downloader-Fehler
+downloader.addEventListener(&#39;downloaderror&#39;, function(e) {
+    Ti.API.error(&#39;Download error: &#39; + e.message);
+});
+<code></code>`</p>
+
+<hr/>
+
+<h2>Bekannte Einschränkungen</h2>
+
+<ul><li><strong>iOS nur</strong>: Android-Unterstützung ist in der Roadmap.</li><li><strong>Arm64 only</strong>: x86_64-Simulator wird nicht unterstützt.</li><li><strong>Speicherbedarf</strong>: Geladene Modelle benötigen ca. 2–4× ihre Dateigröße im Arbeitsspeicher.</li><li><strong>Kein Background-Modus</strong>: LLM-Inferenz läuft nur im Vordergrund.</li><li><strong>Modellgröße</strong>: Modelle können 1–20 GB groß sein.</li></ul>
+
+<hr/>
+
+<h2>Lizenz</h2>
+
+<p>Apache License 2.0</p>
+
+<hr/>
+
+<h2>Autor</h2>
+
+<p>Marc Bender – <a href="mailto:marcbender@example.com">marcbender@example.com</a></p>

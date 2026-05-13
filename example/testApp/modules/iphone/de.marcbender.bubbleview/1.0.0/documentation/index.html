@@ -1,0 +1,503 @@
+<h1>TiBubble Module</h1>
+
+<h2>Description</h2>
+
+<p>TiBubble is a Titanium native module that provides a configurable bubble speech view for iOS and Android. It renders a speech bubble with customizable corner radius, fill color, beak position, and tail geometry.</p>
+
+<p>The BubbleView can be used as a container for other views (labels, images, etc.) by adding them as children.</p>
+
+<h2>Platforms</h2>
+
+<p>| Platform | Minimum Version | Supported |
+|----------|----------------|-----------|
+| iOS | 11.0+ | ✅ |
+| Android | 5.0+ (API 21+) | ✅ |</p>
+
+<h2>Requirements</h2>
+
+<ul><li><strong>Titanium SDK:</strong> 13.2.0.GA or later</li><li><strong>Architectures:</strong><ul><li>iOS: arm64, x86_64 (Simulator)</li><li>Android: armeabi-v7a, arm64-v8a, x86, x86_64</li></ul></li></ul>
+
+<h2>Installation</h2>
+
+<ol><li>Download the latest distribution package for your platform(s):<ul><li>iOS: <code>de.marcbender.bubbleview-iphone-1.0.0.zip</code></li><li>Android: <code>de.marcbender.bubbleview-android-1.0.0.zip</code></li></ul></li><li>Place the <code>.zip</code> file(s) in your Titanium project&#39;s <code>modules</code> directory</li><li>Add the module to your <code>tiapp.xml</code>:</li></ol>
+
+<p><code>xml
+&lt;modules&gt;
+    &lt;module platform=&quot;iphone&quot; version=&quot;1.0.0&quot;&gt;de.marcbender.bubbleview&lt;/module&gt;
+    &lt;module platform=&quot;android&quot; version=&quot;1.0.0&quot;&gt;de.marcbender.bubbleview&lt;/module&gt;
+&lt;/modules&gt;
+</code></p>
+
+<ol><li>Build and run your Titanium project</li></ol>
+
+<h2>Accessing the Module</h2>
+
+<p><code>javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);
+</code></p>
+
+<hr/>
+
+<h2>API Reference</h2>
+
+<h3>Module Constants</h3>
+
+<p>| Constant | Value | Description |
+|----------|-------|-------------|
+| <code>tibubble.BUBBLE_BEAK_LEFT</code> | 0 | Beak points left |
+| <code>tibubble.BUBBLE_BEAK_RIGHT</code> | 1 | Beak points right |
+| <code>tibubble.BUBBLE_BEAK_LOWER</code> | 0 (iOS: 2) | Beak points downward |
+| <code>tibubble.BUBBLE_BEAK_UPPER</code> | 1 (iOS: 3) | Beak points upward |</p>
+
+<blockquote><p><strong>Note:</strong> On Android, <code>bubbleBeak</code> and <code>bubbleBeakVertical</code> both use 0/1. On iOS, the values are mapped internally (0/1 for horizontal, 2/3 for vertical). The JavaScript API is consistent across platforms.</p></blockquote>
+
+<h3>Module Methods</h3>
+
+<h4><code>tibubble.createBubble(properties)</code></h4>
+
+<p>Creates a new BubbleView instance.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<p>| Name | Type | Description |
+|------|------|-------------|
+| <code>properties</code> | Object | Dictionary of properties to apply to the bubble |</p>
+
+<p><strong>Returns:</strong> <code>BubbleProxy</code> - The created bubble view proxy</p>
+
+<p><strong>Example:</strong></p>
+
+<p><code>javascript
+const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE_BEAK_LEFT,
+    bubbleBeakVertical: tibubble.BUBBLE_BEAK_LOWER,
+    tailWidth: 4,
+    tailLength: 10,
+    tailCurveY: 4,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 50
+});
+</code></p>
+
+<hr/>
+
+<h3>BubbleView Properties</h3>
+
+<p>All properties can be set at creation time or modified at runtime.</p>
+
+<h4><code>bubbleColor</code> (String)</h4>
+
+<p>The fill color of the bubble. Accepts any valid Titanium color value.</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | String |
+| <strong>Default</strong> | <code>#FFFFFF</code> (white) |
+| <strong>Supported Formats</strong> | Hex (<code>#RRGGBB</code>), RGB, RGBA, Named colors (<code>&#39;red&#39;</code>, <code>&#39;blue&#39;</code>, etc.) |</p>
+
+<p><code></code>`javascript
+// Set at creation
+const bubble = tibubble.createBubble({ bubbleColor: &#39;#4183C4&#39; });</p>
+
+<p>// Change at runtime
+bubble.bubbleColor = &#39;#ff0000&#39;;
+bubble.bubbleColor = &#39;red&#39;;
+bubble.bubbleColor = Ti.Color.RED;
+<code></code>`</p>
+
+<h4><code>bubbleRadius</code> (Number)</h4>
+
+<p>The corner radius of the bubble in points/dp. Determines how rounded the bubble corners are.</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>20.0</code> |
+| <strong>Unit</strong> | points (iOS) / dp (Android) |</p>
+
+<p><code></code>`javascript
+// Set at creation
+const bubble = tibubble.createBubble({ bubbleRadius: 20 });</p>
+
+<p>// Change at runtime
+bubble.bubbleRadius = 30;
+<code></code>`</p>
+
+<h4><code>bubbleBeak</code> (Number)</h4>
+
+<p>The horizontal position of the bubble&#39;s beak (pointer).</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>tibubble.BUBBLE_BEAK_LEFT</code> (0) |
+| <strong>Valid Values</strong> | <code>0</code> (left), <code>1</code> (right) |</p>
+
+<p><code></code>`javascript
+// Set at creation
+const bubble = tibubble.createBubble({ bubbleBeak: tibubble.BUBBLE<em>BEAK</em>LEFT });</p>
+
+<p>// Change at runtime
+bubble.bubbleBeak = tibubble.BUBBLE<em>BEAK</em>RIGHT;
+<code></code>`</p>
+
+<h4><code>bubbleBeakVertical</code> (Number)</h4>
+
+<p>The vertical position of the bubble&#39;s beak (pointer).</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>tibubble.BUBBLE_BEAK_LOWER</code> (0) |
+| <strong>Valid Values</strong> | <code>0</code> (lower/downward), <code>1</code> (upper/upward) |</p>
+
+<p><code></code>`javascript
+// Set at creation
+const bubble = tibubble.createBubble({ bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER });</p>
+
+<p>// Change at runtime
+bubble.bubbleBeakVertical = tibubble.BUBBLE<em>BEAK</em>UPPER;
+<code></code>`</p>
+
+<h4><code>tailWidth</code> (Number)</h4>
+
+<p>The width of the bubble&#39;s tail (beak) in points/dp. Controls how wide the tail is at its base.</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>4.0</code> |
+| <strong>Unit</strong> | points (iOS) / dp (Android) |</p>
+
+<p><code>javascript
+bubble.tailWidth = 6;
+</code></p>
+
+<h4><code>tailLength</code> (Number)</h4>
+
+<p>The length of the bubble&#39;s tail (beak) in points/dp. Controls how far the tail extends from the bubble body.</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>10.0</code> |
+| <strong>Unit</strong> | points (iOS) / dp (Android) |</p>
+
+<p><code>javascript
+bubble.tailLength = 15;
+</code></p>
+
+<h4><code>tailCurveY</code> (Number)</h4>
+
+<p>The curve offset of the bubble&#39;s tail in points/dp. Controls how curved the tail is.</p>
+
+<p>| Attribute | Value |
+|-----------|-------|
+| <strong>Type</strong> | Number |
+| <strong>Default</strong> | <code>4.0</code> |
+| <strong>Unit</strong> | points (iOS) / dp (Android) |</p>
+
+<p><code>javascript
+bubble.tailCurveY = 6;
+</code></p>
+
+<h3>Standard Titanium View Properties</h3>
+
+<p>In addition to the bubble-specific properties, the BubbleView supports all standard Titanium view properties:</p>
+
+<p>| Property | Type | Description |
+|----------|------|-------------|
+| <code>width</code> | Number/String | Width of the view |
+| <code>height</code> | Number/String | Height of the view |
+| <code>top</code> | Number/String | Top position |
+| <code>left</code> | Number/String | Left position |
+| <code>right</code> | Number/String | Right position |
+| <code>bottom</code> | Number/String | Bottom position |
+| <code>zIndex</code> | Number | Stack order |
+| <code>opacity</code> | Number | Opacity (0.0 - 1.0) |
+| <code>visible</code> | Boolean | Visibility |
+| <code>touchEnabled</code> | Boolean | Touch handling |
+| <code>layout</code> | String | Layout mode (<code>&#39;vertical&#39;</code>, <code>&#39;horizontal&#39;</code>, <code>&#39;none&#39;</code>) |</p>
+
+<hr/>
+
+<h3>BubbleView Methods</h3>
+
+<p>All standard Titanium view methods are available (<code>add()</code>, <code>remove()</code>, <code>animate()</code>, etc.).</p>
+
+<hr/>
+
+<h3>Events</h3>
+
+<p>The BubbleView supports all standard Titanium view events:</p>
+
+<p>| Event | Description | Properties |
+|-------|-------------|------------|
+| <code>click</code> | Fired when the bubble is tapped | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>singletap</code> | Fired on single tap | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>doubletap</code> | Fired on double tap | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>longpress</code> | Fired on long press | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>touchstart</code> | Fired when touch begins | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>touchend</code> | Fired when touch ends | <code>source</code>, <code>x</code>, <code>y</code> |
+| <code>touchmove</code> | Fired when touch moves | <code>source</code>, <code>x</code>, <code>y</code> |</p>
+
+<p><code>javascript
+bubble.addEventListener(&#39;click&#39;, function(e) {
+    Ti.API.info(&#39;Bubble tapped at: &#39; + e.x + &#39;, &#39; + e.y);
+});
+</code></p>
+
+<hr/>
+
+<h2>Examples</h2>
+
+<h3>Basic Bubble</h3>
+
+<p><code></code>`javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);</p>
+
+<p>const win = Ti.UI.createWindow({ backgroundColor: &#39;#f0f0f0&#39; });</p>
+
+<p>const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE<em>BEAK</em>LEFT,
+    bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 50
+});</p>
+
+<p>win.add(bubble);
+win.open();
+<code></code>`</p>
+
+<h3>Bubble with Text Content</h3>
+
+<p><code></code>`javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);</p>
+
+<p>const win = Ti.UI.createWindow({ backgroundColor: &#39;#f0f0f0&#39; });</p>
+
+<p>const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE<em>BEAK</em>LEFT,
+    bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 50
+});</p>
+
+<p>const label = Ti.UI.createLabel({
+    text: &#39;Hello, World!&#39;,
+    color: &#39;#ffffff&#39;,
+    font: { fontSize: 18, fontWeight: &#39;bold&#39; },
+    height: Ti.SIZE<em>AUTO,
+    width: Ti.SIZE</em>AUTO,
+    top: 20,
+    left: 20,
+    right: 20
+});</p>
+
+<p>bubble.add(label);
+win.add(bubble);
+win.open();
+<code></code>`</p>
+
+<h3>Interactive Bubble with Click Handler</h3>
+
+<p><code></code>`javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);</p>
+
+<p>const win = Ti.UI.createWindow({ backgroundColor: &#39;#f0f0f0&#39; });</p>
+
+<p>const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE<em>BEAK</em>RIGHT,
+    bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 150
+});</p>
+
+<p>const label = Ti.UI.createLabel({
+    text: &#39;Tap me!&#39;,
+    color: &#39;#ffffff&#39;,
+    font: { fontSize: 18, fontWeight: &#39;bold&#39; },
+    height: Ti.SIZE<em>AUTO,
+    width: Ti.SIZE</em>AUTO,
+    top: 20,
+    left: 20
+});</p>
+
+<p>bubble.addEventListener(&#39;click&#39;, function(e) {
+    bubble.bubbleColor = &#39;#ff0000&#39;;
+    label.text = &#39;Tapped!&#39;;
+});</p>
+
+<p>bubble.add(label);
+win.add(bubble);
+win.open();
+<code></code>`</p>
+
+<h3>Animated Bubble</h3>
+
+<p><code></code>`javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);</p>
+
+<p>const win = Ti.UI.createWindow({ backgroundColor: &#39;#f0f0f0&#39; });</p>
+
+<p>const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE<em>BEAK</em>LEFT,
+    bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 50
+});</p>
+
+<p>bubble.addEventListener(&#39;click&#39;, function() {
+    bubble.animate({
+        duration: 500,
+        left: bubble.left === 50 ? 200 : 50,
+        top: bubble.top === 50 ? 200 : 50,
+        callback: function() {
+            Ti.API.info(&#39;Animation complete&#39;);
+        }
+    });
+});</p>
+
+<p>win.add(bubble);
+win.open();
+<code></code>`</p>
+
+<h3>Complete Interactive Demo</h3>
+
+<p><code></code>`javascript
+const tibubble = require(&#39;de.marcbender.bubbleview&#39;);</p>
+
+<p>const win = Ti.UI.createWindow({ backgroundColor: &#39;#f0f0f0&#39; });</p>
+
+<p>// Create bubble
+const bubble = tibubble.createBubble({
+    bubbleColor: &#39;#4183C4&#39;,
+    bubbleRadius: 20,
+    bubbleBeak: tibubble.BUBBLE<em>BEAK</em>LEFT,
+    bubbleBeakVertical: tibubble.BUBBLE<em>BEAK</em>LOWER,
+    width: 200,
+    height: 150,
+    top: 50,
+    left: 50
+});</p>
+
+<p>const label = Ti.UI.createLabel({
+    text: &#39;Bubble: Left-Lower&#39;,
+    color: &#39;#333&#39;,
+    font: { fontSize: 16, fontWeight: &#39;bold&#39; },
+    top: 220,
+    left: 50
+});</p>
+
+<p>// Button: Beak Left
+const buttonLeft = Ti.UI.createButton({
+    title: &#39;Beak Left&#39;,
+    top: 260, left: 50, width: 100
+});
+buttonLeft.addEventListener(&#39;click&#39;, function() {
+    bubble.bubbleBeak = tibubble.BUBBLE<em>BEAK</em>LEFT;
+    label.text = &#39;Bubble: Left-&#39; + (bubble.bubbleBeakVertical === 0 ? &#39;Lower&#39; : &#39;Upper&#39;);
+});</p>
+
+<p>// Button: Beak Right
+const buttonRight = Ti.UI.createButton({
+    title: &#39;Beak Right&#39;,
+    top: 260, left: 160, width: 100
+});
+buttonRight.addEventListener(&#39;click&#39;, function() {
+    bubble.bubbleBeak = tibubble.BUBBLE<em>BEAK</em>RIGHT;
+    label.text = &#39;Bubble: Right-&#39; + (bubble.bubbleBeakVertical === 0 ? &#39;Lower&#39; : &#39;Upper&#39;);
+});</p>
+
+<p>// Button: Beak Upper
+const buttonUpper = Ti.UI.createButton({
+    title: &#39;Beak Upper&#39;,
+    top: 310, left: 50, width: 100
+});
+buttonUpper.addEventListener(&#39;click&#39;, function() {
+    bubble.bubbleBeakVertical = tibubble.BUBBLE<em>BEAK</em>UPPER;
+    label.text = &#39;Bubble: &#39; + (bubble.bubbleBeak === 0 ? &#39;Left&#39; : &#39;Right&#39;) + &#39;-Upper&#39;;
+});</p>
+
+<p>// Button: Random Color
+const buttonColor = Ti.UI.createButton({
+    title: &#39;Random Color&#39;,
+    top: 310, left: 160, width: 100
+});
+buttonColor.addEventListener(&#39;click&#39;, function() {
+    const randomColor = &#39;#&#39; + Math.floor(Math.random() * 16777215).toString(16).padStart(6, &#39;0&#39;);
+    bubble.bubbleColor = randomColor;
+    label.text = &#39;Color: &#39; + randomColor;
+});</p>
+
+<p>// Button: Radius +10
+const buttonRadius = Ti.UI.createButton({
+    title: &#39;Radius +10&#39;,
+    top: 360, left: 50, width: 100
+});
+buttonRadius.addEventListener(&#39;click&#39;, function() {
+    bubble.bubbleRadius = (parseFloat(bubble.bubbleRadius) || 20) + 10;
+    label.text = &#39;Radius: &#39; + bubble.bubbleRadius;
+});</p>
+
+<p>win.add(bubble);
+win.add(label);
+win.add(buttonLeft);
+win.add(buttonRight);
+win.add(buttonUpper);
+win.add(buttonColor);
+win.add(buttonRadius);
+win.open();
+<code></code>`</p>
+
+<hr/>
+
+<h2>Platform Differences</h2>
+
+<h3>iOS</h3>
+
+<ul><li>Uses Core Graphics for rendering</li><li>Supports hardware acceleration</li><li>Beak values: 0/1 for horizontal, 2/3 for vertical (mapped internally)</li><li>Fallback to simple rectangle if view is too small</li></ul>
+
+<h3>Android</h3>
+
+<ul><li>Uses Canvas/Path for rendering</li><li>Anti-aliasing enabled by default</li><li>Beak values: 0/1 for both horizontal and vertical</li><li>Fallback to rounded rectangle if view is too small</li></ul>
+
+<hr/>
+
+<h2>Tips &amp; Best Practices</h2>
+
+<ol><li><strong>Minimum Size:</strong> Ensure the bubble is at least <code>2 * bubbleRadius</code> in width and height for proper rendering</li><li><strong>Performance:</strong> The bubble redraws on every property change. Batch property changes where possible</li><li><strong>Content:</strong> Add child views with appropriate margins to avoid overlap with the bubble edges</li><li><strong>Tail Customization:</strong> Adjust <code>tailWidth</code>, <code>tailLength</code>, and <code>tailCurveY</code> together for consistent proportions</li><li><strong>Memory:</strong> The bubble uses minimal memory. No special cleanup is required</li></ol>
+
+<hr/>
+
+<h2>Author</h2>
+
+<p><strong>Marc Bender</strong>
+TiDev, Inc.
+[marc<em>bender@icloud.com](mailto:marc</em>bender@icloud.com)</p>
+
+<h2>License</h2>
+
+<p>Apache Public License (version 2)</p>
+
+<p>Copyright (c) 2026 TiDev, Inc. All rights reserved.</p>

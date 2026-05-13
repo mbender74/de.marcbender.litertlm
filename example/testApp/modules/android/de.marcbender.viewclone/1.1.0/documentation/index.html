@@ -1,0 +1,193 @@
+<h1>ViewClone Module</h1>
+
+<h2>Description</h2>
+
+<p>The ViewClone module enables efficient deep cloning of Titanium UI Views with recursive copying of all child views and properties. Cloning happens natively on the Java (Android) or Objective-C (iOS) layer for maximum performance.</p>
+
+<p>Unlike the SDK&#39;s built-in clone mechanism, which shares the same JavaScript wrapper between original and clone, ViewClone creates a truly independent clone with its own JavaScript identity.</p>
+
+<h2>Features</h2>
+
+<ul><li><strong>Recursive cloning</strong>: Copies complex view hierarchies in full depth</li><li><strong>Property copy</strong>: All Titanium properties are preserved</li><li><strong>Native performance</strong>: Cloning executes on the native layer for fast operation</li><li><strong>Cross-platform</strong>: Supports both Android and iOS</li><li><strong>Compatibility</strong>: Supports all Ti.UI.View types (View, Label, Button, ImageView, etc.)</li><li><strong>Independent identity</strong>: Each clone gets its own JS wrapper — no shared state with the original</li></ul>
+
+<h2>Accessing the ViewClone Module</h2>
+
+<p>To use the module in JavaScript:</p>
+
+<p><code>javascript
+import viewclone from &#39;de.marcbender.viewclone&#39;;
+// or
+var viewclone = require(&#39;de.marcbender.viewclone&#39;);
+</code></p>
+
+<h2>Reference</h2>
+
+<h3>viewclone.cloneView(view)</h3>
+
+<p>Clones a TiViewProxy instance with all properties and child views. Child views are cloned recursively.</p>
+
+<h4>Arguments</h4>
+
+<p>| Name | Type | Description |
+|------|------|-------------|
+| view | TiViewProxy | The view proxy to clone |</p>
+
+<h4>Returns</h4>
+
+<p>TiViewProxy — A new independent view proxy, or <code>null</code> if cloning fails.</p>
+
+<h4>What gets cloned</h4>
+
+<ul><li>All properties (positioning, styling, layout, fonts, colors, etc.)</li><li>Child views — recursively cloned and added to the cloned parent</li><li>The view type (<code>apiName</code>) — the clone is the same Ti.UI type as the original</li></ul>
+
+<h4>What does NOT get cloned</h4>
+
+<ul><li>Event listeners — add new listeners to the clone as needed</li></ul>
+
+<h4>Example</h4>
+
+<p><code></code>`javascript
+const originalView = Ti.UI.createView({
+    backgroundColor: &#39;red&#39;,
+    width: 100,
+    height: 100
+});</p>
+
+<p>const clonedView = viewclone.cloneView(originalView);
+clonedView.backgroundColor = &#39;blue&#39;;
+win.add(clonedView);
+<code></code>`</p>
+
+<h4>Complex View Example</h4>
+
+<p><code></code>`javascript
+// Create a complex layout with child views
+const container = Ti.UI.createView({
+    layout: &#39;vertical&#39;,
+    backgroundColor: &#39;#eee&#39;,
+    width: 300,
+    height: 200
+});</p>
+
+<p>const header = Ti.UI.createLabel({
+    text: &#39;Header&#39;,
+    backgroundColor: &#39;#0066cc&#39;,
+    color: &#39;#fff&#39;,
+    width: Ti.UI.FILL,
+    height: 40
+});</p>
+
+<p>const content = Ti.UI.createLabel({
+    text: &#39;Content&#39;,
+    color: &#39;#333&#39;,
+    width: Ti.UI.FILL,
+    height: Ti.UI.FILL
+});</p>
+
+<p>container.add(header);
+container.add(content);
+win.add(container);</p>
+
+<p>// Clone the entire layout
+const clonedContainer = viewclone.cloneView(container);
+clonedContainer.top = 250;</p>
+
+<p>// Access cloned children via the .children property
+const children = clonedContainer.children;
+if (children &amp;&amp; children.length &gt; 0) {
+    children[0].text = &#39;Cloned Header&#39;;
+}</p>
+
+<p>win.add(clonedContainer);
+<code></code>`</p>
+
+<h2>Usage</h2>
+
+<h3>Simple cloning</h3>
+
+<p><code></code>`javascript
+import viewclone from &#39;de.marcbender.viewclone&#39;;</p>
+
+<p>const original = Ti.UI.createLabel({
+    text: &#39;Hello World&#39;,
+    color: &#39;#000&#39;,
+    font: { fontSize: 16 }
+});</p>
+
+<p>const clone = viewclone.cloneView(original);
+clone.text = &#39;Cloned Text&#39;;
+<code></code>`</p>
+
+<h3>Recursive cloning with child views</h3>
+
+<p>The module automatically clones all child views recursively:</p>
+
+<p><code></code>`javascript
+const parent = Ti.UI.createView({
+    layout: &#39;vertical&#39;
+});</p>
+
+<p>const child1 = Ti.UI.createLabel({ text: &#39;Child 1&#39; });
+const child2 = Ti.UI.createLabel({ text: &#39;Child 2&#39; });</p>
+
+<p>parent.add(child1);
+parent.add(child2);</p>
+
+<p>// Cloning also clones child1 and child2
+const clonedParent = viewclone.cloneView(parent);
+<code></code>`</p>
+
+<h3>Event listener handling</h3>
+
+<p>Event listeners are <strong>not</strong> cloned. Add your own listeners to the clone after cloning:</p>
+
+<p><code></code>`javascript
+const button = Ti.UI.createButton({ title: &#39;Click me&#39; });</p>
+
+<p>button.addEventListener(&#39;click&#39;, function(e) {
+    console.log(&#39;Original clicked&#39;);
+});</p>
+
+<p>const clonedButton = viewclone.cloneView(button);</p>
+
+<p>// Add a new listener to the clone
+clonedButton.addEventListener(&#39;click&#39;, function(e) {
+    console.log(&#39;Cloned clicked&#39;);
+});
+<code></code>`</p>
+
+<h3>Accessing cloned children</h3>
+
+<p>Use the <code>.children</code> property to access child views of a cloned view. Do <strong>not</strong> use <code>.getChildren()</code> — it is not available on cloned views because <code>children</code> is exposed as a JavaScript property via <code>@Kroll.getProperty</code>, not as a callable method.</p>
+
+<p><code></code>`javascript
+const clonedView = viewclone.cloneView(parentView);</p>
+
+<p>// Correct
+const children = clonedView.children;</p>
+
+<p>// Incorrect — not available on cloned views
+const children = clonedView.getChildren();
+<code></code>`</p>
+
+<h3>Native view properties</h3>
+
+<p>Properties like <code>rect</code> and <code>size</code> may return zero values immediately after cloning. The native view is created lazily when the proxy is added to a visible window. Actual values are populated once the view is rendered.</p>
+
+<h2>Screenshots</h2>
+
+<h3>Android</h3>
+
+<p><img alt="Android Screenshot" src="android-screenshot.png"/></p>
+
+<h3>iOS</h3>
+
+<p><img alt="iOS Screenshot" src="ios-screenshot.png"/></p>
+
+<h2>Author</h2>
+
+<p><strong>Marc Bender</strong></p>
+
+<h2>License</h2>
+
+<p>Apache Public License</p>

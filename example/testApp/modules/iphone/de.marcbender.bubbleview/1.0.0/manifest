@@ -1,0 +1,19 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: arm64 x86_64
+mac: true
+description: TiBubble
+author: Marc Bender
+license: Specify your license
+copyright: Copyright (c) 2026 by Your Company
+
+# these should not be edited
+name: TiBubble
+moduleid: de.marcbender.bubbleview
+guid: bfb7fe2b-4738-49a9-be43-ce574943097c
+platform: iphone
+minsdk: 13.2.0.GA

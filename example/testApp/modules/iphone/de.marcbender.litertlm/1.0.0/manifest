@@ -1,0 +1,19 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: arm64
+mac: true
+description: Titanium module for LiteRTLM - On-device LLM inference on iOS
+author: Marc Bender
+license: Apache 2.0
+copyright: Copyright (c) 2026 by Your Company
+
+# these should not be edited
+name: TitaniumLiteRTLM
+moduleid: de.marcbender.litertlm
+guid: 208537d4-6bc7-4c6c-abcc-71efc42ca465
+platform: iphone
+minsdk: 13.2.0.GA

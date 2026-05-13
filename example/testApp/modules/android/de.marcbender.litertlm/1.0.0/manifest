@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 4
+architectures: arm64-v8a x86_64
+description: TitaniumLiteRTLM - On-device LLM inference module
+author: Marc Bender
+license: Apache License 2.0
+copyright: Copyright (c) 2026 by Marc Bender
+
+# these should not be edited
+name: TitaniumLiteRTLM
+moduleid: de.marcbender.litertlm
+guid: 208537d4-6bc7-4c6c-abcc-71efc42ca465
+platform: android
+minsdk: 13.2.0.GA
