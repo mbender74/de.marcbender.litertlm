@@ -6,7 +6,6 @@ android/dist/
 
 # Test app build artifacts
 example/testApp/build/
-example/testApp/platform/
 
 # Xcode
 *.xcworkspace/xcuserdata/
